@@ -1,0 +1,6 @@
+# F0.1b — tooling (Vite + Vitest)
+node_modules/
+dist/
+.vite/
+coverage/
+*.local

@@ -1,0 +1,2314 @@
+/* ==========================================================================
+   CFI Serviços — Inventário Inteligente de Sites Telecom
+   Stylesheet principal
+   ========================================================================== */
+
+:root {
+  --bg: #f7fbf9;
+  --panel: #fff;
+  --panel2: #f0f7f3;
+  --primary: #007a53;
+  --primary2: #005f42;
+  --accent: #00a884;
+  --blue: #0a5f9e;
+  --line: #d8e5df;
+  --text: #18332b;
+  --muted: #687b73;
+  --warn: #f59e0b;
+  --danger: #dc2626;
+  --ok: #16a34a;
+  --shadow: 0 18px 38px rgba(17, 72, 55, .11);
+  --radius: 18px;
+  --font: "Segoe UI", Inter, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(0, 168, 132, .08), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(0, 122, 83, .06), transparent 36%),
+    #f7fbf9;
+  font-family: var(--font);
+  color: var(--text);
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* Foco acessível visível em todos os controles interativos */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.node-line:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Layout geral
+   ========================================================================== */
+
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background:
+    linear-gradient(180deg, #f4faf7 0%, #e8f4ef 55%, #dff0e8 100%);
+  color: var(--text);
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-right: 1px solid var(--line);
+  box-shadow: 6px 0 24px rgba(17, 72, 55, .06);
+  z-index: 2;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 6px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand strong {
+  color: var(--primary2);
+}
+
+.brand-mark {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--accent), #77ddbd);
+  color: #04382d;
+  font-weight: 900;
+}
+
+.brand small {
+  display: block;
+  color: var(--muted);
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.nav-title {
+  color: var(--primary2);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin: 8px 8px 4px;
+  opacity: .85;
+}
+
+.nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  transition: .18s;
+}
+
+.nav-btn:hover {
+  background: rgba(0, 122, 83, .08);
+}
+
+.nav-btn.active {
+  background: rgba(0, 122, 83, .14);
+  color: var(--primary2);
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.nav-btn .badge {
+  margin-left: auto;
+  background: rgba(0, 122, 83, .12);
+  color: var(--primary2);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.rights {
+  margin-top: auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.rights strong {
+  color: var(--primary2);
+}
+
+.main {
+  padding: 24px;
+  overflow: auto;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.title h1 {
+  margin: 0;
+  /* 0.75 × tamanho anterior: clamp(24px, 3vw, 36px) */
+  font-size: clamp(18px, 2.25vw, 27px);
+  letter-spacing: -.03em;
+}
+
+.title p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 850px;
+  line-height: 1.5;
+}
+
+.topbar-settings {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 13px;
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+
+.avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #dceefb;
+  color: var(--blue);
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   Cards, KPIs, grid
+   ========================================================================== */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.card {
+  background: rgba(255, 255, 255, .9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(216, 229, 223, .95);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.kpi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kpi-label {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: -.03em;
+}
+
+.kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: var(--panel2);
+  font-size: 22px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 430px) 1fr;
+  gap: 18px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   Botões e formulários
+   ========================================================================== */
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.btn {
+  padding: 11px 15px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 8px 16px rgba(0, 122, 83, .18);
+}
+
+.btn:hover {
+  background: var(--primary2);
+}
+
+.btn.secondary {
+  background: #e7f3ef;
+  color: var(--primary2);
+  box-shadow: none;
+  border: 1px solid #c9e3da;
+}
+
+.btn.warn {
+  background: #fff5db;
+  color: #9a6700;
+  box-shadow: none;
+  border: 1px solid #f5d78c;
+}
+
+.btn.danger {
+  background: #fee2e2;
+  color: #991b1b;
+  box-shadow: none;
+  border: 1px solid #fecaca;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.field.has-error input,
+.field.has-error select,
+.field.has-error textarea {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, .08);
+}
+
+.field-error {
+  font-size: 12px;
+  color: var(--danger);
+  font-weight: 700;
+  display: none;
+}
+
+.field.has-error .field-error {
+  display: block;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #406156;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+input, select, textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: #fff;
+  color: var(--text);
+  outline: none;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(0, 168, 132, .1);
+}
+
+/* ==========================================================================
+   Árvore hierárquica
+   ========================================================================== */
+
+.tree {
+  display: grid;
+  gap: 8px;
+  max-height: 600px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.tree-node {
+  display: grid;
+  gap: 6px;
+}
+
+.node-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  transition: .15s;
+  cursor: pointer;
+}
+
+.node-line:hover {
+  border-color: #9fdcca;
+  transform: translateX(2px);
+}
+
+.node-line.active {
+  background: #e4f6ef;
+  border-color: var(--accent);
+}
+
+.node-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.mini-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #f1f7f4;
+  color: var(--primary2);
+  font-weight: 900;
+  font-size: 15px;
+}
+
+.mini-btn.danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.mini-btn-txt {
+  width: auto;
+  min-width: 34px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.indent {
+  margin-left: 24px;
+  padding-left: 10px;
+  border-left: 2px dashed #d8e5df;
+}
+
+/* ==========================================================================
+   Tabs e painéis de detalhe
+   ========================================================================== */
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+/* Navegação Próximo/Anterior entre guias (v3.4) — generic, qualquer .tabs */
+.tab-nav-setas {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.tab-seta {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--primary2);
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.tab-seta:hover:not(:disabled) {
+  background: #e3f0ea;
+}
+
+.tab-seta:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.tab {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: #edf5f2;
+  color: #31594c;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.panel {
+  display: none;
+}
+
+.panel.active {
+  display: block;
+}
+
+.pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pill {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: #eff7f4;
+  border: 1px solid var(--line);
+  color: #31594c;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pill.pill-broken {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.pill b {
+  color: var(--primary2);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.status.ok { background: #dcfce7; color: #166534; }
+.status.warn { background: #fef3c7; color: #92400e; }
+.status.danger { background: #fee2e2; color: #991b1b; }
+.status.neutral { background: #eef2f6; color: #475569; }
+
+.empty-warning {
+  margin: 0;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fff1f2;
+  color: #991b1b;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   Guia recolhível do Início (Mapa mental do projeto)
+   ========================================================================== */
+
+.home-guide {
+  padding: 0;
+  overflow: hidden;
+}
+.home-guide-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 16px 18px;
+  cursor: pointer;
+  user-select: none;
+  background: linear-gradient(180deg, #eef6f2, #e4efe9);
+  border-bottom: 1px solid transparent;
+}
+.home-guide[open] .home-guide-summary {
+  border-bottom-color: var(--line);
+}
+.home-guide-summary::-webkit-details-marker { display: none; }
+.home-guide-summary h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.2px;
+  flex: 1 1 auto;
+  min-width: 160px;
+}
+.home-guide-actions {
+  flex: none;
+  margin-left: auto;
+}
+.home-guide-caret {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  transition: transform .15s ease;
+}
+.home-guide:not([open]) .home-guide-caret { transform: rotate(-90deg); }
+.home-guide-body {
+  padding: 14px 18px 18px;
+}
+.home-guide:not([open]) .home-guide-body { display: none; }
+
+/* ==========================================================================
+   Mapa mental
+   ========================================================================== */
+
+.mindmap {
+  display: grid;
+  place-items: center;
+  min-height: 340px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, .03) 1px, transparent 1px),
+    linear-gradient(rgba(0, 0, 0, .03) 1px, transparent 1px);
+  background-size: 26px 26px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  padding: 20px;
+}
+
+.map-wrap {
+  position: relative;
+  width: min(780px, 100%);
+  min-height: 330px;
+}
+
+.map-node {
+  position: absolute;
+  padding: 11px 14px;
+  border-radius: 15px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 22px rgba(17, 72, 55, .09);
+  font-weight: 900;
+  font-size: 13px;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-node.center {
+  background: var(--primary);
+  color: #fff;
+  font-size: 15px;
+  z-index: 2;
+}
+
+.map-line {
+  position: absolute;
+  height: 2px;
+  background: #9fcfc1;
+  transform-origin: left center;
+  opacity: .8;
+}
+
+/* ==========================================================================
+   Fluxo guiado
+   ========================================================================== */
+
+/* ==========================================================================
+   Tabelas
+   ========================================================================== */
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 720px;
+  background: #fff;
+}
+
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-size: 13px;
+}
+
+th {
+  background: #edf7f3;
+  color: #31594c;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+tr.row-clickable {
+  cursor: pointer;
+}
+
+tr.row-clickable:hover {
+  background: #f7fbf9;
+}
+
+/* ==========================================================================
+   Modal e toast
+   ========================================================================== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 23, 18, .55);
+  display: none;
+  place-items: center;
+  z-index: 20;
+  padding: 18px;
+}
+
+.modal-backdrop.active {
+  display: grid;
+}
+
+.modal {
+  width: min(760px, 100%);
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .24);
+  padding: 20px;
+  max-height: 92vh;
+  overflow: auto;
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  background: #073b30;
+  color: #fff;
+  padding: 13px 16px;
+  border-radius: 14px;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, .2);
+  display: none;
+  z-index: 30;
+  max-width: 420px;
+}
+
+.toast.active {
+  display: block;
+}
+
+.toast.toast-error {
+  background: #7f1d1d;
+}
+
+/* ==========================================================================
+   Utilitários e responsividade
+   ========================================================================== */
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.autosave-indicator {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.autosave-indicator .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+@media (max-width: 1100px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: sticky;
+    top: 0;
+    flex-direction: row;
+    overflow-x: auto;
+    border-radius: 0 0 22px 22px;
+  }
+  .brand, .rights, .nav-title { display: none; }
+  .nav-btn { white-space: nowrap; }
+  .cards, .layout, .split { grid-template-columns: 1fr; }
+  .topbar { flex-direction: column; }
+}
+
+@media print {
+  .sidebar, .btn-row, .tabs, .chip, .modal-backdrop, .toast { display: none !important; }
+  .app { display: block; }
+  .main { padding: 0; }
+  .card { box-shadow: none; break-inside: avoid; }
+}
+
+/* ==========================================================================
+   Ferramentas de mapa em tela cheia (v3): Mapa Mental + Mapa de Dependências
+   Classes genéricas — qualquer ferramenta com canvas SVG + zoom reaproveita.
+   ========================================================================== */
+
+.modal.modal-wide {
+  width: min(1480px, 96vw);
+}
+
+.modal.modal-sm {
+  width: min(440px, 100%);
+}
+
+.canvas-tool-wrap {
+  overflow: auto;
+  max-height: 68vh;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, .03) 1px, transparent 1px),
+    linear-gradient(rgba(0, 0, 0, .03) 1px, transparent 1px);
+  background-size: 26px 26px;
+  padding: 16px;
+}
+
+.canvas-tool {
+  display: inline-block;
+}
+
+.canvas-tool svg .mm-box,
+.canvas-tool svg .dg-box,
+.mindmap .mm-box {
+  transition: filter .12s;
+}
+
+.canvas-tool svg .mm-node:hover .mm-box,
+.canvas-tool svg .dg-node:hover .dg-box,
+.mindmap .mm-node:hover .mm-box {
+  filter: brightness(0.96);
+}
+
+/* Edição por arraste no Mapa Mental completo (v3.2) */
+.canvas-tool svg .mm-node {
+  touch-action: none; /* o gesto é tratado em JS — evita o navegador roubar o toque pra rolar */
+}
+
+.canvas-tool svg .mm-node.mm-dragging {
+  cursor: grabbing;
+}
+
+.canvas-tool svg .mm-node.mm-dragging .mm-box {
+  filter: drop-shadow(0 8px 16px rgba(17, 72, 55, .35));
+  opacity: .92;
+}
+
+.canvas-tool svg .mm-node.mm-drop-ok .mm-box {
+  stroke: var(--ok);
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 7px rgba(22, 163, 74, .55));
+}
+
+.canvas-tool svg .mm-node.mm-drop-bad .mm-box {
+  stroke: var(--danger);
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 7px rgba(220, 38, 38, .45));
+}
+
+@media (max-width: 760px) {
+  .modal.modal-wide { width: 98vw; }
+  .canvas-tool-wrap { max-height: 60vh; padding: 10px; }
+}
+
+/* ==========================================================================
+   Reorganização do painel do Mapa Mental (v3.3): barra superior, barra
+   intermediária (zoom + hubs de função) e barra inferior (legenda + dica).
+   ========================================================================== */
+
+.btn-sm {
+  padding: 8px 12px;
+  font-size: 12.5px;
+  border-radius: 9px;
+}
+
+.toolbar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.toolbar-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.2px;
+  color: var(--text);
+}
+
+/* Título do editor: mesmo corpo tipográfico das guias (Propriedades/Saída/Aparência) */
+.mm-editor .toolbar-title.mm-editor-title {
+  font-size: 12.5px;
+  letter-spacing: .2px;
+}
+
+.toolbar-top-acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.toolbar-top-acoes .mm-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--line);
+  margin: 0 2px;
+}
+.toolbar-top-acoes .icon-btn:disabled {
+  opacity: .4;
+  cursor: default;
+}
+.mm-editor.mm-vale .toolbar-top-acoes .mm-sep {
+  background: var(--mm-line, #4A4A4A);
+}
+/* Guias Legenda / Ajuda ancoradas à direita (ao lado de Desfazer/Refazer) */
+.toolbar-top-acoes .mm-appear-tab-wrap.mm-guide-right {
+  position: relative;
+}
+.toolbar-top-acoes .mm-guide-right .mm-appear-popup {
+  left: auto;
+  right: 0;
+  width: min(420px, 92vw);
+  max-height: min(72vh, 580px);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.toolbar-top-acoes .mm-guide-right .mm-appear-popup.mm-popup-legenda {
+  width: min(280px, 92vw);
+  max-height: none;
+}
+.toolbar-top-acoes .mm-guide-right .mm-appear-popup:not([hidden]) {
+  display: flex;
+}
+.toolbar-top-acoes .mm-guide-right .mm-appear-popup-body.mm-ajuda-body {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  gap: 14px;
+}
+.mm-legenda-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin: 0;
+}
+.mm-legenda-list .pill {
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+.mm-legenda-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 8px;
+  flex: none;
+}
+.mm-ajuda-block h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+}
+.mm-ajuda-block ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.mm-ajuda-block li { margin-bottom: 4px; }
+.mm-editor.mm-vale .mm-ajuda-block h4 { color: var(--mm-safety); }
+.mm-editor.mm-vale .mm-ajuda-block ul { color: var(--mm-muted); }
+.mm-editor.mm-vale .mm-ajuda-block strong { color: var(--mm-text); }
+
+.toolbar-mid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.toolbar-bottom {
+  margin-top: 10px;
+}
+
+.icon-btn,
+.icon-btn-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  color: var(--primary2);
+  font-size: 15px;
+  cursor: pointer;
+  flex: none;
+}
+
+.icon-btn:hover {
+  background: #e3f0ea;
+}
+
+.icon-btn-close:hover {
+  background: #fde8e8;
+  color: var(--danger);
+  border-color: #f3c9c9;
+}
+
+/* "Hub": botão que concentra um grupo de funções num menu suspenso, em vez
+   de espalhar tudo numa única linha de botões. */
+.hub {
+  position: relative;
+}
+
+.hub-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  min-width: 230px;
+}
+
+.hub-menu.open {
+  display: block;
+}
+
+.hub-menu > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.hub-menu > button:hover {
+  background: var(--panel2);
+}
+
+.hub-menu > button:disabled {
+  color: #aab6b0;
+  cursor: not-allowed;
+}
+
+.hub-menu > hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 6px 0;
+}
+
+.hub-secao-titulo {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+  padding: 4px 10px 2px;
+}
+
+.seg-toggle {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  margin: 4px 0 8px;
+}
+
+.seg-btn {
+  flex: 1;
+  padding: 8px 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--panel);
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.seg-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.seg-btn:hover:not(.active) {
+  background: var(--panel2);
+}
+
+/* Tela cheia: o .modal vira o próprio elemento de fullscreen — preenche
+   a tela inteira em vez de ficar centralizado com a largura de 1480px. */
+.modal.modal-wide:fullscreen {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  max-height: none;
+  border-radius: 0;
+  overflow-y: auto;
+}
+
+.modal.modal-wide:fullscreen .canvas-tool-wrap {
+  max-height: calc(100vh - 230px);
+}
+
+.foto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.foto-thumb {
+  position: relative;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(17, 72, 55, .08);
+}
+
+.foto-thumb img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+}
+
+.foto-thumb figcaption {
+  padding: 7px 9px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.foto-thumb .foto-del {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+/* ==========================================================================
+   Drill-down hierárquico (v3.6 — usabilidade mobile/campo)
+   ========================================================================== */
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 9px;
+  margin-bottom: 10px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-height: 42px;
+}
+.crumb {
+  border: none;
+  background: transparent;
+  color: var(--primary2);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crumb:hover { background: #e3f0ea; }
+.crumb-sep { color: var(--muted); font-weight: 800; padding: 0 1px; }
+.crumb-current {
+  color: var(--text);
+  font-weight: 800;
+  cursor: default;
+  background: #e4f6ef;
+}
+
+/* Linha do nó (drill-down): alvo de toque grande, texto em duas linhas */
+.node-line {
+  padding: 13px 12px;
+  min-height: 58px;
+}
+.node-icon { font-size: 21px; flex: none; }
+.node-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.node-text strong { font-size: 15px; }
+.node-text small { font-size: 12px; }
+.node-status { flex: none; font-size: 11px; }
+.node-chevron {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--primary2);
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.node-chevron:hover:not(:disabled) { background: #e3f0ea; }
+.node-chevron:disabled { opacity: .3; cursor: default; }
+.drill-empty { padding: 18px 12px; }
+
+/* FAB — adicionar filho no nível atual (mobile) */
+.fab {
+  display: none;
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(0, 122, 83, .35);
+  z-index: 25;
+  align-items: center;
+  justify-content: center;
+}
+.fab:hover { background: var(--primary2); }
+
+/* Barra do bottom sheet (só no mobile) */
+.item-sheet-bar { display: none; }
+
+@media (max-width: 1100px) {
+  /* Detalhe vira bottom sheet: fora do fluxo, sobe de baixo quando há item selecionado */
+  #itemSheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 24;
+    max-height: 86vh;
+    overflow: auto;
+    background: #fff;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -12px 30px rgba(0, 0, 0, .18);
+    transform: translateY(102%);
+    transition: transform .25s ease;
+  }
+  body.item-selected #itemSheet { transform: translateY(0); }
+  .item-sheet-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 8px 12px 4px;
+  }
+  .item-sheet-handle {
+    width: 44px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--line);
+  }
+  .item-sheet-close {
+    position: absolute;
+    right: 10px;
+    top: 6px;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--panel2);
+    color: var(--danger);
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  #itemSheet > .card {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .fab { display: flex; }
+  .tree { max-height: none; }
+  .main { padding-bottom: 84px; }
+}
+
+/* ==========================================================================
+   Circuitos físicos (v3.6) — aba de detalhe + modal de edição + mapa
+   ========================================================================== */
+
+.circuito-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+}
+.circuito-pill .circ-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.circuito-pill .circ-info small {
+  font-size: 11px;
+  word-break: break-word;
+}
+
+/* Modal: lista de trechos ordenados */
+.circ-trechos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.circ-trecho {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px 12px;
+  background: var(--panel2);
+}
+.circ-trecho-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.circ-trecho-head b {
+  color: var(--primary2);
+  font-size: 13px;
+}
+.circ-trecho-moves {
+  display: flex;
+  gap: 4px;
+}
+.circ-trecho-moves .mini-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+.circ-t-attrs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.circ-t-attrs .field { margin: 0; }
+@media (max-width: 720px) {
+  .circ-t-attrs { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .circ-t-attrs { grid-template-columns: 1fr; }
+}
+
+/* Mapa de circuito: canvas rolável (mesmo padrão do mindmap/depgraph) */
+.canvas-tool-wrap {
+  max-height: 64vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.canvas-tool { min-height: 180px; }
+.canvas-tool svg { display: block; max-width: none; }
+
+/* ==========================================================================
+   Multi-site (grupo no topo de Hierarquias)
+   ========================================================================== */
+
+.multisite-card {
+  margin-bottom: 14px;
+}
+.multisite-card .btn-row { gap: 8px; }
+
+/* ==========================================================================
+   Barra lateral — árvore padrão Explorer (v3.7)
+   ========================================================================== */
+
+.sidebar-nav-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: visible;
+}
+.explorer-quick {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.explorer-tree {
+  max-height: 46vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.explorer-node { position: relative; }
+.explorer-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 6px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  user-select: none;
+  white-space: nowrap;
+}
+.explorer-row:hover { background: rgba(0, 122, 83, .08); }
+.explorer-row.active { background: rgba(0, 122, 83, .14); color: var(--primary2); font-weight: 700; }
+.explorer-chev {
+  width: 14px;
+  flex: none;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.explorer-chev.leaf { cursor: default; }
+.explorer-icon { flex: none; font-size: 14px; }
+.explorer-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.explorer-site .explorer-label { font-weight: 600; }
+.explorer-subtree {
+  margin-left: 14px;
+  border-left: 1px dashed var(--line);
+  padding-left: 4px;
+}
+.explorer-tree::-webkit-scrollbar { width: 8px; }
+.explorer-tree::-webkit-scrollbar-thumb { background: #b9d4c8; border-radius: 8px; }
+
+/* ==========================================================================
+   Início — barra de sites (v3.7)
+   ========================================================================== */
+.site-bar { padding: 12px 14px; }
+.site-bar .btn-row { row-gap: 6px; }
+.site-search {
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+}
+.site-search:focus { outline: none; border-color: var(--primary); }
+
+/* ==========================================================================
+   Editor do Mapa Mental (v3.7) — layout CAD: canvas central, dock direito,
+   rodapé de status. Padrão de paletas inspirado em AutoCAD/Revit/Corel.
+   ========================================================================== */
+
+.modal.mm-editor {
+  display: flex;
+  flex-direction: column;
+  height: 92vh;
+  max-height: 92vh;
+  overflow: hidden;
+  padding: 0;
+  border-radius: 0;
+  width: min(100vw, 100%);
+}
+
+.mm-editor-header { flex: none; }
+
+/* Controles de janela (− minimizar, + maximizar, ✕ fechar) */
+.mm-window-controls {
+  display: inline-flex;
+  align-items: stretch;
+  margin-left: 4px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.mm-win-btn {
+  min-width: 34px;
+  height: 28px;
+  padding: 0 10px;
+  border: none;
+  border-right: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.mm-win-btn:last-child { border-right: none; }
+.mm-win-btn:hover:not(:disabled) { background: #dcebe3; }
+.mm-win-btn:disabled { opacity: .4; cursor: default; }
+.mm-win-btn.mm-win-close:hover:not(:disabled) {
+  background: #dc2626;
+  color: #fff;
+}
+.mm-editor.mm-vale .mm-window-controls { border-color: var(--mm-line); }
+.mm-editor.mm-vale .mm-win-btn {
+  background: #3A3A3A;
+  border-right-color: var(--mm-line);
+  color: var(--mm-text);
+}
+.mm-editor.mm-vale .mm-win-btn:hover:not(:disabled) {
+  background: #4A4A4A;
+  color: var(--mm-safety);
+}
+.mm-editor.mm-vale .mm-win-btn.mm-win-close:hover:not(:disabled) {
+  background: #b91c1c;
+  color: #fff;
+}
+
+/* Chrome das barras superiores (título + guias) — coladas, sem cantos arredondados */
+.mm-editor .toolbar-top.mm-editor-header {
+  margin: 0;
+  padding: 8px 12px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, #eef6f2 0%, #e2ece7 48%, #d7e6df 100%);
+  box-shadow: 0 4px 14px rgba(16, 40, 32, .1);
+  align-items: center;
+  position: relative;
+  z-index: 6;
+}
+
+/* Barra de guias (Propriedades | Saída | Aparência) + popups */
+.mm-guide-bar.mm-appear-bar,
+.mm-appear-bar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  position: relative;
+  z-index: 5;
+  padding: 7px 10px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, #f3f8f5, #e7f0eb);
+  box-shadow: 0 3px 12px rgba(16, 40, 32, .08);
+}
+.mm-appear-tab-wrap {
+  position: relative;
+}
+.mm-appear-popup.mm-popup-props {
+  max-height: min(70vh, 560px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.mm-appear-popup.mm-popup-props:not([hidden]) {
+  display: flex;
+}
+.mm-appear-popup.mm-popup-props .mm-appear-popup-body {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+.mm-appear-popup .field { margin-bottom: 8px; width: 100%; }
+.mm-appear-popup .field label { font-size: 11px; }
+.mm-appear-popup .field input,
+.mm-appear-popup .field select { width: 100%; box-sizing: border-box; }
+.mm-appear-popup .dock-btn { margin-bottom: 4px; }
+
+/* Visualização — ferramentas de zoom (grade 2x2) */
+#mmViewToolToggle.mm-view-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+#mmViewToolToggle.mm-view-tools .seg-btn {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 6px;
+  font-size: 11.5px;
+  white-space: normal;
+  line-height: 1.25;
+}
+.mm-editor.mm-vale #mmViewToolToggle.mm-view-tools .seg-btn {
+  border-color: var(--mm-line);
+  background: #2F2F2F;
+  color: var(--mm-text);
+}
+.mm-editor.mm-vale #mmViewToolToggle.mm-view-tools .seg-btn.active {
+  background: var(--mm-safety);
+  color: #1E1E1E;
+  border-color: var(--mm-safety);
+}
+
+/* Display Model (estilo CAD): superfície isolada — sem seleção de texto nativa */
+#mindMapModalBackdrop .mm-canvas-area,
+#mindMapFull,
+#mindMapFull svg,
+#mindMapFull svg * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+#mindMapFull svg text,
+#mindMapFull svg tspan {
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none; /* texto é rótulo do nó; hit-test fica no .mm-node / .mm-box */
+}
+#mindMapFull svg .mm-node,
+#mindMapFull svg .mm-node .mm-box,
+#mindMapFull svg .mm-toggle,
+#mindMapFull svg .mm-integrate,
+#mindMapFull svg .mm-link,
+#mindMapFull svg .mm-link-hit,
+#mindMapFull svg .mm-link-end {
+  pointer-events: all;
+}
+#mindMapFull svg .mm-integrate:hover circle {
+  fill: #dc2626;
+  filter: drop-shadow(0 0 5px rgba(239, 68, 68, .55));
+}
+.mm-radio-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mm-radio-row input { margin-top: 2px; }
+#mindMapFull svg .mm-node.mm-link-pick .mm-box {
+  stroke: #FFFFFF !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, .45));
+}
+#mindMapFull svg .mm-link:hover .mm-link-path {
+  stroke-width: 3.2;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, .45));
+}
+
+.mm-link-modal {
+  width: min(720px, 96vw) !important;
+  max-height: 90vh;
+  overflow: auto;
+}
+.mm-link-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 8px;
+}
+.mm-link-ends {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.mm-link-end-card {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel2, #f4f8f6);
+}
+.mm-link-end-card legend {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+.mm-editor.mm-vale .mm-link-end-card {
+  background: #2A2A2A;
+  border-color: var(--mm-line);
+}
+.mm-editor.mm-vale .mm-link-end-card legend { color: var(--mm-safety); }
+@media (max-width: 700px) {
+  .mm-link-grid,
+  .mm-link-ends { grid-template-columns: 1fr; }
+}
+#mindMapFull .mm-inline-input {
+  -webkit-user-select: text;
+  user-select: text;
+  pointer-events: auto;
+}
+#mindMapFull ::selection { background: transparent; }
+
+/* Cursors do Display Model */
+#mindMapFull { position: relative; cursor: default; }
+#mindMapFull.mm-tool-pan { cursor: grab; }
+#mindMapFull.mm-tool-pan:active { cursor: grabbing; }
+#mindMapFull.mm-tool-realtime { cursor: ns-resize; }
+#mindMapFull.mm-tool-window { cursor: crosshair; }
+
+/* Rubber band Zoom Window */
+.mm-zoom-rubber {
+  position: absolute;
+  border: 1.5px dashed #FFFFFF;
+  background: rgba(255, 255, 255, .12);
+  pointer-events: none;
+  z-index: 8;
+  box-sizing: border-box;
+}
+.mm-editor:not(.mm-vale) .mm-zoom-rubber {
+  border-color: #007a53;
+  background: rgba(0, 122, 83, .12);
+}
+.mm-appear-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel2);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mm-appear-tab:hover { border-color: var(--primary, #007a53); }
+.mm-appear-tab[aria-expanded="true"] {
+  border-color: var(--primary, #007a53);
+  box-shadow: 0 0 0 2px rgba(0, 122, 83, .15);
+}
+.mm-appear-caret {
+  font-size: 10px;
+  color: var(--muted);
+  transition: transform .15s;
+}
+.mm-appear-tab[aria-expanded="true"] .mm-appear-caret { transform: rotate(180deg); }
+
+.mm-appear-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(360px, 92vw);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .22);
+  z-index: 30;
+}
+.mm-appear-popup[hidden] { display: none !important; }
+.mm-appear-popup-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #eef6f2, #e4efe9);
+  border-radius: 12px 12px 0 0;
+}
+.mm-appear-popup-head strong {
+  font-size: 13px;
+  color: var(--text);
+}
+.mm-appear-popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+.mm-appear-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.mm-appear-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .35px;
+  color: var(--muted);
+}
+.mm-appear-checks {
+  gap: 8px;
+}
+.mm-appear-popup .mm-switch {
+  margin: 0;
+  font-size: 12px;
+}
+.mm-appear-popup .seg-toggle { width: 100%; }
+
+.mm-editor.mm-vale .mm-appear-tab {
+  background: #3A3A3A;
+  border-color: var(--mm-line);
+  color: var(--mm-safety);
+}
+.mm-editor.mm-vale .mm-appear-tab[aria-expanded="true"] {
+  border-color: var(--mm-safety);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .2);
+}
+.mm-editor.mm-vale .mm-appear-popup {
+  background: #2F2F2F;
+  border-color: var(--mm-line);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .55);
+}
+.mm-editor.mm-vale .mm-appear-popup-head {
+  background: linear-gradient(180deg, #444, #383838);
+  border-bottom-color: var(--mm-line);
+}
+.mm-editor.mm-vale .mm-appear-popup-head strong { color: var(--mm-safety); }
+.mm-editor.mm-vale .mm-appear-label { color: var(--mm-muted); }
+
+/* ==========================================================================
+   Tema Vale Industrial (editor do mapa mental)
+   Charcoal #2F2F2F · Branco #FFFFFF · Aptos Narrow
+   ========================================================================== */
+.mm-editor.mm-vale {
+  --mm-charcoal: #2F2F2F;
+  --mm-charcoal-deep: #1E1E1E;
+  --mm-safety: #FFFFFF;
+  --mm-text: #F2F2F2;
+  --mm-muted: #A8A8A8;
+  --mm-line: #4A4A4A;
+  background: var(--mm-charcoal);
+  color: var(--mm-text);
+  font-family: "Aptos Narrow", "Segoe UI Narrow", "Arial Narrow", sans-serif;
+  border: 1px solid #4A4A4A;
+}
+.mm-editor.mm-vale .toolbar-title { color: var(--mm-safety); }
+.mm-editor.mm-vale .muted,
+.mm-editor.mm-vale .mm-tip { color: var(--mm-muted) !important; }
+.mm-editor.mm-vale .toolbar-top.mm-editor-header {
+  border-bottom-color: var(--mm-line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, #3A3A3A 0%, #2F2F2F 55%, #262626 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+}
+.mm-editor.mm-vale .mm-guide-bar.mm-appear-bar {
+  border-bottom-color: var(--mm-line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, #383838, #2C2C2C);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, .3);
+}
+.mm-editor.mm-vale .mm-dock-title {
+  background: #3A3A3A;
+  border-color: var(--mm-line);
+  color: var(--mm-safety);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.mm-editor.mm-vale .mm-palette {
+  background: #3A3A3A;
+  border-color: var(--mm-line);
+}
+.mm-editor.mm-vale .mm-palette summary {
+  background: linear-gradient(180deg, #444, #383838);
+  color: var(--mm-safety);
+  border-bottom-color: var(--mm-line);
+}
+.mm-editor.mm-vale .dock-btn {
+  background: #2F2F2F;
+  border-color: var(--mm-line);
+  color: var(--mm-text);
+}
+.mm-editor.mm-vale .dock-btn:hover:not(:disabled) {
+  background: #454545;
+  border-color: var(--mm-safety);
+}
+.mm-editor.mm-vale .dock-btn kbd {
+  background: #1E1E1E;
+  border-color: #555;
+  color: var(--mm-muted);
+}
+.mm-editor.mm-vale .field label { color: var(--mm-muted); }
+.mm-editor.mm-vale .field input,
+.mm-editor.mm-vale .field select,
+.mm-editor.mm-vale .field textarea {
+  background: #1E1E1E;
+  border-color: #555;
+  color: var(--mm-text);
+}
+.mm-editor.mm-vale .field input:focus,
+.mm-editor.mm-vale .field select:focus {
+  border-color: var(--mm-safety);
+  outline: none;
+}
+.mm-editor.mm-vale .btn.secondary {
+  background: #3A3A3A;
+  border-color: #555;
+  color: var(--mm-text);
+}
+.mm-editor.mm-vale .btn.secondary:hover { border-color: var(--mm-safety); }
+.mm-editor.mm-vale .mm-btn-accent,
+.mm-editor.mm-vale .btn:not(.secondary):not(.danger):not(.warn) {
+  background: var(--mm-safety);
+  color: #1E1E1E;
+  border-color: var(--mm-safety);
+  font-weight: 800;
+}
+.mm-editor.mm-vale .seg-toggle {
+  background: #1E1E1E;
+  border-color: #555;
+}
+.mm-editor.mm-vale .seg-btn { color: var(--mm-muted); }
+.mm-editor.mm-vale .seg-btn.active {
+  background: var(--mm-safety);
+  color: #1E1E1E;
+}
+.mm-editor.mm-vale .icon-btn,
+.mm-editor.mm-vale .icon-btn-close {
+  background: #3A3A3A;
+  border-color: #555;
+  color: var(--mm-text);
+}
+.mm-editor.mm-vale .pill {
+  background: #3A3A3A;
+  border-color: #555;
+  color: var(--mm-text);
+}
+.mm-editor.mm-vale #mindMapModalBackdrop .canvas-tool-wrap.mm-canvas-area,
+.mm-editor.mm-vale .mm-canvas-area {
+  background: #1E1E1E;
+  border-color: #4A4A4A;
+}
+.mm-path-chip {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  background: #1E1E1E;
+  border: 1px dashed #FFFFFF;
+  color: #FFFFFF;
+  word-break: break-all;
+}
+.mm-editor:not(.mm-vale) .mm-path-chip {
+  background: #eef6f2;
+  border-color: #007a53;
+  color: #007a53;
+}
+.mm-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 12px;
+  color: inherit;
+  cursor: pointer;
+}
+.mm-switch input { width: 16px; height: 16px; cursor: pointer; }
+
+/* Explorer: destaque sync com mapa mental */
+.explorer-row.active {
+  outline: 1px solid transparent;
+}
+body:has(#mindMapModalBackdrop.active) .explorer-row.explorer-item.active {
+  box-shadow: inset 3px 0 0 #FFFFFF;
+}
+body:has(#mindMapModalBackdrop.active):not(:has(.mm-editor.mm-vale)) .explorer-row.explorer-item.active {
+  box-shadow: inset 3px 0 0 #007a53;
+}
+
+.mm-workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+}
+
+#mindMapModalBackdrop .canvas-tool-wrap.mm-canvas-area {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  max-height: none;
+  overflow: hidden;
+  padding: 0;
+  background: #f4f8f6;
+  position: relative;
+}
+
+#mindMapFull.canvas-tool {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#mindMapFull.canvas-tool svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── Dock de ferramentas (direita) ── */
+.mm-dock {
+  flex: none;
+  width: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 2px;
+}
+.mm-dock::-webkit-scrollbar { width: 8px; }
+.mm-dock::-webkit-scrollbar-thumb { background: #cfe0d8; border-radius: 8px; }
+
+.mm-dock-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel2);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .35px;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55);
+}
+
+.mm-palette {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.mm-palette summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: var(--text);
+  background: linear-gradient(180deg, #eef6f2, #e4efe9);
+  border-bottom: 1px solid var(--line);
+}
+.mm-palette summary::-webkit-details-marker { display: none; }
+.mm-palette summary::after {
+  content: "▾";
+  float: right;
+  color: var(--muted);
+  transition: transform .15s;
+}
+.mm-palette:not([open]) summary { border-bottom: none; }
+.mm-palette:not([open]) summary::after { transform: rotate(-90deg); }
+
+.mm-palette-body { padding: 8px; }
+.mm-palette-body .field { margin-bottom: 8px; }
+.mm-palette-body .field label { font-size: 11px; }
+.mm-palette-body .field input,
+.mm-palette-body .field select { padding: 6px 8px; font-size: 12.5px; }
+
+.mm-palette-sub {
+  margin: 8px 0 5px;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--muted);
+}
+
+.dock-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 7px 9px;
+  margin-bottom: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel2);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.dock-btn:hover:not(:disabled) { background: #dcebe3; border-color: #b8d4c8; }
+.dock-btn:disabled { opacity: .45; cursor: default; }
+.dock-btn kbd {
+  margin-left: auto;
+  font: 600 10px 'Segoe UI', monospace;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.mm-zoom-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+/* ── Barra de ferramentas inferior (modos + zoom) — colada, sem radius ── */
+.mm-toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 7px 10px;
+  position: relative;
+  z-index: 4;
+  border: none;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, #f3f8f5, #e7f0eb);
+  box-shadow: 0 -3px 12px rgba(16, 40, 32, .08);
+}
+.mm-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mm-toolbar-sep {
+  width: 1px;
+  align-self: stretch;
+  min-height: 28px;
+  background: var(--line);
+  flex: none;
+}
+.mm-toolbar .seg-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0;
+  width: auto;
+}
+.mm-toolbar .seg-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.mm-tip { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.mm-editor.mm-vale .mm-toolbar {
+  border-top-color: var(--mm-line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, #3A3A3A, #2A2A2A);
+  box-shadow: 0 -3px 14px rgba(0, 0, 0, .3);
+}
+.mm-editor.mm-vale .mm-toolbar-sep { background: var(--mm-line); }
+.mm-editor.mm-vale .mm-toolbar .seg-btn {
+  background: #2F2F2F;
+  border-color: var(--mm-line);
+  color: var(--mm-text);
+}
+.mm-editor.mm-vale .mm-toolbar .seg-btn.active {
+  background: var(--mm-safety);
+  color: #1E1E1E;
+  border-color: var(--mm-safety);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .35), 0 0 12px rgba(255, 255, 255, .15);
+}
+
+/* ── Tela cheia: mesmo layout, ocupando 100vh ── */
+.modal.mm-editor:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  max-height: none;
+  overflow: hidden;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* Backdrop do MM: editor ocupa a tela (sem margem) quando ativo */
+#mindMapModalBackdrop.active {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+#mindMapModalBackdrop.active .modal.mm-editor {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+}
+
+@media (max-width: 900px) {
+  .mm-workspace { flex-direction: column; }
+  .mm-dock { width: 100%; max-height: 38vh; flex-direction: row; flex-wrap: wrap; }
+  .mm-dock .mm-palette { flex: 1 1 220px; }
+  .mm-tip { display: none; }
+}
+
+/* anel de foco no nó selecionado no canvas */
+.canvas-tool svg .mm-node.mm-focus .mm-box {
+  stroke: #0a5f9e;
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 6px rgba(10, 95, 158, .45));
+}
+.mm-editor.mm-vale .canvas-tool svg .mm-node.mm-focus .mm-box {
+  stroke: #FFFFFF;
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, .45));
+}
+
+/* toggle de colapsar/expandir */
+.canvas-tool svg .mm-toggle:hover circle {
+  filter: brightness(1.12);
+}
+
+/* input de renomear inline sobre o nó */
+.mm-inline-input {
+  font: 700 12.5px 'Segoe UI', Inter, system-ui, sans-serif;
+  color: #18332b;
+  text-align: left;
+  padding: 0 8px;
+  border: 2.5px solid #0a5f9e;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(10, 95, 158, .28);
+  outline: none;
+}
+

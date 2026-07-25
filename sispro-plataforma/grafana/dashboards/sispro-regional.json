@@ -1,0 +1,141 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Sites na região",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+          "format": "table",
+          "rawSql": "SELECT COUNT(*)::int AS value FROM sites WHERE org_id = 'cfiservicos' AND region_id = '$region';",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "title": "Ativos mapeados",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+          "format": "table",
+          "rawSql": "SELECT COALESCE(SUM(itens_count),0)::int AS value FROM sites WHERE org_id = 'cfiservicos' AND region_id = '$region';",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "title": "Em campo / revisão",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+          "format": "table",
+          "rawSql": "SELECT COUNT(*)::int AS value FROM sites WHERE org_id = 'cfiservicos' AND region_id = '$region' AND prontuario_status IN ('em_campo','enviado_pelo_tecnico','em_revisao');",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "title": "Concluídos",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+          "format": "table",
+          "rawSql": "SELECT COUNT(*)::int AS value FROM sites WHERE org_id = 'cfiservicos' AND region_id = '$region' AND prontuario_status = 'concluido';",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false } },
+        "overrides": []
+      },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 4 },
+      "id": 5,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "large",
+        "footer": { "show": false }
+      },
+      "title": "Sites da regional — publique pelo SisPro (☁ Publicar no Grafana) e escolha a regional",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+          "format": "table",
+          "rawSql": "SELECT codigo AS \"Código\", nome AS \"Site\", criticidade AS \"Criticidade\", status_operacional AS \"Status\", prontuario_status AS \"Prontuário\", itens_count AS \"Ativos\", local_instalacao AS \"Local\" FROM sites WHERE org_id = 'cfiservicos' AND region_id = '$region' ORDER BY nome;",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["sispro", "piloto", "regional"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": true, "text": "carajas", "value": "carajas" },
+        "datasource": { "type": "postgres", "uid": "sispro-postgres" },
+        "definition": "SELECT region_id AS __value, nome AS __text FROM regions WHERE org_id = 'cfiservicos' ORDER BY nome;",
+        "name": "region",
+        "label": "Regional",
+        "query": "SELECT region_id AS __value, nome AS __text FROM regions WHERE org_id = 'cfiservicos' ORDER BY nome;",
+        "refresh": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "SisPro — Visão Regional (piloto)",
+  "uid": "sispro-regional-piloto",
+  "version": 1
+}

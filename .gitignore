@@ -1,0 +1,37 @@
+# Secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies / build
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+
+# Mobile / Android / iOS
+**/android/.gradle/
+**/android/app/build/
+**/android/build/
+**/android/local.properties
+**/android/captures/
+**/ios/App/Pods/
+**/ios/DerivedData/
+**/*.keystore
+**/*.jks
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+*.local
+
+# Docker local data
+**/postgres-data/
+**/grafana-data/
+sispro-plataforma/web-dist/

@@ -1,0 +1,19 @@
+{
+  "name": "inventario-cfi",
+  "version": "3.6.0",
+  "private": true,
+  "description": "CFI Serviços — Inventário Inteligente de Sites Telecom (harness APK + VPS). Fase 0: hardening.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}

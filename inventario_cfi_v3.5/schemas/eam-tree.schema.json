@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cfi.eam.tree/v1",
+  "title": "CFI EAM Tree — Hierarquia de ativos telecom",
+  "description": "Schema recursivo para sync Mapa Mental ↔ Explorer ↔ Firestore. Fonte canônica no app: lista plana items[] com parentId; este schema é a projeção em árvore.",
+  "type": "object",
+  "required": ["schema", "site", "arvore"],
+  "properties": {
+    "schema": { "const": "cfi.eam.tree/v1" },
+    "site": {
+      "type": "object",
+      "required": ["id", "codigo", "nome"],
+      "properties": {
+        "id": { "type": "string" },
+        "codigo": { "type": "string", "maxLength": 80 },
+        "nome": { "type": "string", "maxLength": 300 }
+      }
+    },
+    "gerado_em": { "type": "string", "format": "date-time" },
+    "arvore": { "$ref": "#/$defs/node" }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "label", "type", "path", "children"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string", "maxLength": 300 },
+        "type": {
+          "type": "string",
+          "enum": ["site", "group", "equipment", "component", "asset"]
+        },
+        "path": {
+          "type": "string",
+          "description": "Caminho slugificado, ex.: site-maraba/grupo-lte/equip-qta"
+        },
+        "categoria": { "type": "string" },
+        "tipo": { "type": "string" },
+        "criticidade": { "type": "string", "enum": ["Baixa", "Média", "Alta", "Crítica"] },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "tag": { "type": "string", "maxLength": 80 },
+            "fabricante": { "type": "string", "maxLength": 120 },
+            "statusOperacional": { "type": "string" },
+            "valorDepreciado": { "type": "string", "maxLength": 40 }
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" }
+        }
+      }
+    }
+  }
+}

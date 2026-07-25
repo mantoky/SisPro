@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#063f31" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>SisPro Mobile</title>
+  <link rel="stylesheet" href="/css/mobile.css" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+
+    <!-- LOGIN -->
+    <section id="view-login" class="view active">
+      <div class="login-hero">
+        <div class="brand-mark">SP</div>
+        <h1>SisPro</h1>
+        <p>Sistema de Prontuário de Sites</p>
+      </div>
+      <form id="formLogin" class="card-panel login-card" autocomplete="on">
+        <label class="field">
+          <span>E-mail operacional</span>
+          <input id="loginEmail" type="email" required placeholder="tecnico@cfiservicos.com.br" inputmode="email" />
+        </label>
+        <label class="field">
+          <span>Senha</span>
+          <input id="loginSenha" type="password" required placeholder="••••••••" minlength="4" />
+        </label>
+        <button type="submit" class="btn btn-primary btn-block">Entrar e sincronizar</button>
+        <button type="button" id="btnDemoLogin" class="btn btn-ghost btn-block">Continuar em modo campo (offline)</button>
+        <p class="hint">Cadastro local no aparelho · sync com o SisPro desktop quando houver rede.</p>
+      </form>
+    </section>
+
+    <!-- SHELL LOGADO -->
+    <section id="view-shell" class="view">
+      <header class="topbar">
+        <div>
+          <strong id="topbarTitle">Sites</strong>
+          <small id="topbarUser" class="muted"></small>
+        </div>
+        <div class="topbar-actions">
+          <button type="button" id="btnSync" class="icon-chip" title="Sincronizar" aria-label="Sincronizar">↻</button>
+          <button type="button" id="btnLogout" class="icon-chip" title="Sair" aria-label="Sair">⎋</button>
+        </div>
+      </header>
+
+      <div id="syncBanner" class="sync-banner" hidden></div>
+
+      <main class="content">
+        <!-- LISTA -->
+        <div id="panel-list" class="panel active">
+          <div class="panel-head">
+            <h2>Sites no aparelho</h2>
+            <button type="button" id="btnNovoSite" class="btn btn-primary btn-sm">+ Novo site</button>
+          </div>
+          <input id="buscaSite" class="search" type="search" placeholder="Buscar por nome ou código…" />
+          <div id="siteList" class="site-list" role="list"></div>
+          <p id="emptySites" class="empty" hidden>Nenhum site cadastrado neste aparelho.</p>
+        </div>
+
+        <!-- FORM SITE -->
+        <div id="panel-form" class="panel">
+          <div class="panel-head">
+            <h2 id="formTitle">Novo site</h2>
+            <button type="button" id="btnCancelForm" class="btn btn-ghost btn-sm">Voltar</button>
+          </div>
+          <form id="formSite" class="card-panel form-stack">
+            <input type="hidden" id="siteId" />
+            <label class="field"><span>Nome do site</span><input id="siteNome" required maxlength="200" placeholder="Ex.: LTE MORRO ALFA" /></label>
+            <label class="field"><span>Código (único)</span><input id="siteCodigo" required maxlength="40" placeholder="Ex.: LTE-MA01" /></label>
+            <label class="field"><span>Local de instalação</span><input id="siteLocal" maxlength="200" placeholder="Ex.: FECJ-APD-TEL-REDTI-AB_16" /></label>
+            <label class="field"><span>Centro de trabalho</span><input id="siteCentro" maxlength="80" placeholder="Ex.: LTE-CAR" /></label>
+            <div class="field-row">
+              <label class="field"><span>Criticidade</span>
+                <select id="siteCriticidade">
+                  <option>Baixa</option><option selected>Média</option><option>Alta</option><option>Crítica</option>
+                </select>
+              </label>
+              <label class="field"><span>Status</span>
+                <select id="siteStatus">
+                  <option>Operacional</option>
+                  <option>Operacional com restrição</option>
+                  <option>Em implantação</option>
+                  <option>Em manutenção</option>
+                  <option>Indisponível</option>
+                  <option>Desativado</option>
+                </select>
+              </label>
+            </div>
+            <div class="field-row">
+              <label class="field"><span>Latitude</span><input id="siteLat" inputmode="decimal" placeholder="-23.55" /></label>
+              <label class="field"><span>Longitude</span><input id="siteLng" inputmode="decimal" placeholder="-46.63" /></label>
+            </div>
+            <label class="field"><span>Resumo / observações</span><textarea id="siteResumo" rows="3" maxlength="2000" placeholder="Notas de campo…"></textarea></label>
+            <button type="submit" class="btn btn-primary btn-block">Salvar no aparelho</button>
+            <button type="button" id="btnExcluirSite" class="btn btn-danger btn-block" hidden>Excluir site local</button>
+          </form>
+        </div>
+
+        <!-- DETALHE -->
+        <div id="panel-detail" class="panel">
+          <div class="panel-head">
+            <h2>Detalhe do site</h2>
+            <button type="button" id="btnBackList" class="btn btn-ghost btn-sm">Voltar</button>
+          </div>
+          <article id="siteDetail" class="card-panel detail-card"></article>
+          <div class="btn-row">
+            <button type="button" id="btnAtivos" class="btn btn-primary btn-block">Ativos / camadas</button>
+            <button type="button" id="btnEditarSite" class="btn btn-ghost btn-block">Editar site</button>
+            <button type="button" id="btnPdfRodada" class="btn btn-accent btn-block">PDF rodada</button>
+            <button type="button" id="btnEnviarRevisao" class="btn btn-primary btn-block">Enviar p/ revisão</button>
+            <button type="button" id="btnMarcarSync" class="btn btn-ghost btn-block">Marcar para sync</button>
+          </div>
+          <label class="field" style="margin-top:12px">
+            <span>Obs. da rodada (opcional)</span>
+            <textarea id="rodadaObs" rows="2" maxlength="1000" placeholder="Notas desta rodada de campo…"></textarea>
+          </label>
+          <div id="rodadasList" class="rodadas-list"></div>
+        </div>
+
+        <!-- ÁRVORE DE ATIVOS -->
+        <div id="panel-assets" class="panel">
+          <div class="panel-head">
+            <h2>Ativos do site</h2>
+            <button type="button" id="btnBackDetail" class="btn btn-ghost btn-sm">Voltar</button>
+          </div>
+          <p class="hint assets-hint">Monte camadas pai → filho (sem mapa mental). Atributos sobem no sync para o SisPro.</p>
+          <button type="button" id="btnNovoAtivo" class="btn btn-primary btn-block">+ Novo ativo filho</button>
+          <div id="assetTree" class="asset-tree" role="list"></div>
+        </div>
+
+        <!-- FORM ATIVO -->
+        <div id="panel-asset-form" class="panel">
+          <div class="panel-head">
+            <h2 id="assetFormTitle">Novo ativo</h2>
+            <button type="button" id="btnCancelAsset" class="btn btn-ghost btn-sm">Voltar</button>
+          </div>
+          <form id="formAsset" class="card-panel form-stack">
+            <input type="hidden" id="assetId" />
+            <label class="field">
+              <span>Camada pai</span>
+              <select id="assetParent" required></select>
+            </label>
+            <label class="field">
+              <span>Nome do ativo</span>
+              <input id="assetNome" required maxlength="200" placeholder="Ex.: Torre Autoportante 42m" />
+            </label>
+            <div class="field-row">
+              <label class="field">
+                <span>Categoria</span>
+                <input id="assetCategoria" list="listaCategorias" required maxlength="80" placeholder="Ex.: Energia AC" />
+              </label>
+              <label class="field">
+                <span>Tipo</span>
+                <input id="assetTipo" list="listaTipos" required maxlength="80" placeholder="Ex.: Quadro Geral" />
+              </label>
+            </div>
+            <datalist id="listaCategorias"></datalist>
+            <datalist id="listaTipos"></datalist>
+            <label class="field">
+              <span>Criticidade</span>
+              <select id="assetCriticidade">
+                <option>Baixa</option><option selected>Média</option><option>Alta</option><option>Crítica</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Descrição</span>
+              <textarea id="assetDescricao" rows="2" maxlength="2000" placeholder="Função operacional do ativo…"></textarea>
+            </label>
+            <div class="attrs-block">
+              <div class="panel-head attrs-head">
+                <h3>Atributos</h3>
+                <button type="button" id="btnAddAttr" class="btn btn-ghost btn-sm">+ Par</button>
+              </div>
+              <p class="hint">Chave / valor (ex.: Tensão → 380/220V, Altura → 42 m).</p>
+              <div id="attrRows" class="attr-rows"></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Salvar ativo</button>
+            <button type="button" id="btnExcluirAtivo" class="btn btn-danger btn-block" hidden>Excluir ativo e filhos</button>
+          </form>
+        </div>
+      </main>
+
+      <nav class="tabbar" aria-label="Navegação principal">
+        <button type="button" class="tabbar-btn active" data-panel="list">Sites</button>
+        <button type="button" class="tabbar-btn" data-panel="sync">Sync</button>
+        <button type="button" class="tabbar-btn" data-panel="about">Sobre</button>
+      </nav>
+
+      <div id="panel-sync" class="panel sheet">
+        <div class="panel-head"><h2>Sincronização</h2></div>
+        <div class="card-panel">
+          <p id="syncStatusText" class="sync-status">—</p>
+          <ul id="syncQueue" class="sync-queue"></ul>
+          <button type="button" id="btnSyncNow" class="btn btn-primary btn-block">Sincronizar agora</button>
+          <p class="hint">Os sites salvos no aparelho sobem para o SisPro (Firestore) quando o técnico estiver autenticado e online.</p>
+        </div>
+      </div>
+
+      <div id="panel-about" class="panel sheet">
+        <div class="panel-head"><h2>Sobre</h2></div>
+        <div class="card-panel">
+          <p><strong>SisPro Mobile</strong> v1.0.0</p>
+          <p class="muted">Cadastro local de sites · rodadas PDF · sync Firestore · identidade CFI.</p>
+          <p class="muted">Projeto Firebase: <code>sispro-e068c</code></p>
+          <p class="muted">CFI Serviços · motor de injeção de dados para o SisPro.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

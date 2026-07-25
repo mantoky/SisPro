@@ -1,0 +1,226 @@
+INVENTÁRIO INTELIGENTE DE SITES TELECOM — CFI Serviços
+Versão 3.5 — Integridade Operacional
+=====================================
+
+NOVIDADES DA VERSÃO 3.5 — INTEGRIDADE OPERACIONAL
+---------------------------------------------------
+- Mantém integralmente os recursos severos incorporados até a v3.4.
+- Regra única de inspeção em toda a aplicação: item sem checklist e ponto
+  "Não inspecionado" agora contam como pendência. "Não aplicável" fica
+  fora da base de conformidade. KPIs, relatório, prontuário e laudo usam
+  a mesma regra, eliminando divergências entre telas e documentos.
+- Backup restaurado passa por validação estrutural antes de substituir os
+  dados atuais: IDs, códigos de site, raiz única, pais, ciclos na árvore,
+  dependências quebradas/cíclicas, checklist e evidências são conferidos.
+- Renderização segura dos dados editáveis nas tabelas dinâmicas, evitando
+  que nomes de atributos importados sejam interpretados como HTML/eventos.
+- Novos campos operacionais por site: Local de Instalação, Centro de
+  Trabalho e Status operacional, também presentes nos relatórios.
+- Trilha de auditoria local com usuário, perfil, data/hora, ação, entidade
+  e detalhe, limitada aos 500 eventos mais recentes.
+- Prontuário PDF ampliado com inventário, atributos, dependências e
+  checklist. Excel ampliado para 7 abas, incluindo Dados do Site e
+  Auditoria. Nomes dos arquivos exportados são saneados.
+- Versão interna e esquema de dados atualizados para v3.5/schema 3.
+
+Autenticação real, autorização por perfil e assinatura criptográfica de
+backup exigem servidor e banco de dados e permanecem na próxima fase.
+
+COMO USAR
+---------
+Abra o arquivo "index.html" no seu navegador (duplo clique).
+Não precisa de servidor, internet ou instalação. Funciona 100% offline,
+incluindo geração de PDF e Excel (as bibliotecas estão em js/libs/).
+
+ESTRUTURA
+---------
+index.html          → página principal
+css/styles.css       → estilos
+js/state.js          → estado, persistência (multi-site) e modelo de dados
+js/validation.js     → validação de formulários
+js/render.js         → renderização da interface (árvore, busca, fotos...)
+js/actions.js        → ações do usuário (CRUD, fotos, ciclo, multi-site)
+js/report.js         → relatórios (PDF, Excel, backup/restauração JSON)
+js/mindmap.js        → ferramenta de Mapa Mental (árvore completa, zoom,
+                       impressão, exportação PNG/PDF/JSON)
+js/app.js            → inicialização
+js/libs/             → bibliotecas jsPDF, autotable e SheetJS (offline)
+
+NOVIDADES DA VERSÃO 2 (mantidas)
+---------------------------------
+- Multi-site real: crie vários sites e alterne entre eles no seletor do topo.
+- "Duplicar site atual": clona todos os itens para um novo site.
+- Busca na árvore: filtre por nome, categoria, tipo ou criticidade.
+- Evidências fotográficas: anexe fotos aos itens (aba Evidências).
+- Detecção de dependência circular: o sistema bloqueia ciclos no grafo.
+- Bibliotecas offline: PDF e Excel funcionam sem internet.
+- Migração automática: dados salvos na versão anterior são convertidos
+  para o novo formato sem perda.
+
+NOVIDADES DA VERSÃO 3.0 — RODADA DE MATURIDADE
+-------------------------------------------------
+Ferramenta de Mapa Mental:
+- Árvore COMPLETA do site (todos os níveis), não só raiz + 1 nível.
+- Cor do nó por criticidade — funciona como mapa de risco visual.
+- Selo numérico no nó = quantidade de sub-itens diretos.
+- Clique no nó abre o item direto na árvore.
+- Imprimir (A3 paisagem), Exportar PNG, Exportar PDF, Exportar JSON.
+- Botão "🧠 Mapa mental completo" no Dashboard e na Árvore hierárquica.
+
+Robustez de dados:
+- Agora é possível EXCLUIR um site (não existia nenhuma forma antes).
+  Bloqueado se for o único site restante, para o app nunca ficar "vazio".
+- Indicador de uso de armazenamento na barra lateral — avisa ANTES de
+  estourar a cota do navegador, não só depois do erro de gravação.
+- Lembrete automático de backup após várias alterações sem exportar.
+- Código do site agora precisa ser exclusivo: ele nomeia todo arquivo
+  exportado (PDF, Excel, JSON, mapa mental) — duplicado sobrescrevia
+  arquivos um do outro na pasta de downloads.
+
+Consistência de UI:
+- "Novo site em branco" deixou de usar prompt() nativo do navegador —
+  agora é um modal estilizado, igual ao de "Duplicar site", e o código
+  do site fica visível/editável já na criação (não só depois).
+- Categoria/Tipo de item continuam texto livre, mas agora sugerem (via
+  autocomplete) os valores já usados em qualquer site da rede — reduz
+  o mesmo equipamento sendo grafado de formas diferentes.
+- Dashboard: KPIs do site ativo agora estão rotulados como tal, e há
+  uma faixa separada com o total consolidado de TODA a rede (itens,
+  pendências e conformidade média de todos os sites).
+- Versão do app passou a ter uma única fonte (APP_VERSION em state.js),
+  exibida na barra lateral — antes divergia do número deste documento.
+- Botões e alvos de toque maiores, pensando em uso em campo com luvas.
+
+MAPA DE DEPENDÊNCIAS (decisão registrada e já implementada)
+---------------------------------------------------------------
+Avaliadas as opções A) setas sobre o mapa mental vs. B) mapa dedicado.
+Mesmo objetivo nas duas, mas o layout hierárquico (posição = profundidade
+na árvore) é incompatível com dependência, que é por natureza cruzada
+entre ramos — sobrepor geraria linhas longas cruzando o canvas e disputa
+de cor com a criticidade do nó. Implementado: Opção B.
+
+- Arquivo novo: js/depgraph.js.
+- Layout próprio por NÍVEL DE DEPENDÊNCIA (não por hierarquia), com
+  redução de cruzamento de linhas (heurística de barycenter).
+- Paleta de cor separada por GRUPO de relação (não compete com a cor de
+  criticidade do nó, que continua igual à do mapa mental):
+    • Suporte/Estrutura (depende_de, suporta)
+    • Energia/Proteção (alimenta, protege, aterra, refrigera)
+    • Informação/Monitoramento (monitora, conecta_com, impacta)
+- Setas direcionadas + rótulo do tipo exato de relação em cada linha.
+- Itens sem nenhuma dependência registrada não aparecem (mantém o canvas
+  limpo) — o app avisa quantos itens ficaram de fora.
+- Mesma chrome do Mapa Mental: zoom, clique-para-selecionar, Imprimir
+  (A3 paisagem), Exportar PNG, Exportar PDF, Exportar JSON.
+- Refatoração: a rasterização SVG→canvas usada pelas exportações foi
+  extraída para uma função única (svgParaCanvas, em mindmap.js),
+  reaproveitada pelas duas ferramentas — sem duplicar lógica.
+- Botão "🔗 Mapa de Dependências" no Dashboard e na Árvore hierárquica.
+
+MAPA MENTAL EDITÁVEL (v3.2) — "sinapses editáveis"
+-------------------------------------------------------
+O Mapa Mental completo deixou de ser só leitura: agora dá pra ARRASTAR
+um item e soltar sobre outro para movê-lo (com todos os seus sub-itens)
+para debaixo desse novo pai. Resolve de raiz um problema que não tinha
+solução nenhuma antes: corrigir um item cadastrado no lugar errado da
+hierarquia exigia excluir e recriar do zero, perdendo atributos, fotos,
+dependências e checklist.
+
+- Clique curto: continua abrindo o item na árvore (comportamento de antes).
+- Clique e arraste: realça em VERDE o alvo válido e em VERMELHO o
+  inválido enquanto você arrasta, em tempo real.
+- Bloqueado, com aviso claro: mover a raiz do site, um item para dentro
+  de si mesmo, ou para dentro do seu próprio ramo (criaria um laço).
+- Soltar no mesmo pai atual: não faz nada (sem mensagem de erro).
+- Ao mover, o app recalcula o mapa, a árvore lateral, os KPIs e o
+  Prontuário — tudo lê a mesma fonte de dados, então tudo se atualiza
+  junto, automaticamente.
+- Limitação conhecida: ainda não tem "desfazer" — um arraste indevido
+  se corrige arrastando de volta.
+- Função nova em state.js: moveItemParent() (testada isoladamente para
+  os 6 casos de borda: raiz, auto-pai, laço, no-op, movimento válido e
+  destino inexistente).
+
+MAPA MENTAL — RODADA DE FECHAMENTO (v3.3)
+---------------------------------------------
+Pedidos específicos para o ambiente do Mapa Mental, todos atendidos:
+
+- DESFAZER: Ctrl+Z (e Cmd+Z no Mac) e botão "↩️ Desfazer" dentro do hub
+  "✏️ Editar". Pilha de até 20 movimentos, escopada por site (não deixa
+  desfazer um movimento de outro site por engano).
+- MODO CONECTAR: alternância 🌳 Mover / 🔗 Conectar no mesmo hub. Em
+  "Conectar", arrastar de um item até outro não reparenta — abre um
+  mini-modal para escolher o tipo de relação (depende_de, alimenta,
+  protege...) e cria a dependência, com a mesma validação de ciclo do
+  Mapa de Dependências. As duas ferramentas de grafo agora se editam a
+  partir do mesmo gesto, sem trocar de tela.
+- TELA CHEIA: botão ⛶ no canto superior direito, liga e desliga
+  (também sincroniza se a saída for pelo Esc nativo do navegador).
+- IMPORTAR JSON: contrapartida do "Exportar JSON" desta ferramenta —
+  no hub "📤 Exportar/Importar". Substitui a árvore de itens do site
+  ativo pela do arquivo (mantém atributos/categoria/tipo/criticidade;
+  dependências, fotos e checklist não fazem parte desse formato e por
+  isso o app avisa antes de aplicar, com recomendação de backup prévio).
+- REORGANIZAÇÃO DA TELA: barra superior (título + tela cheia + fechar),
+  barra intermediária (zoom sempre visível + dois "hubs" que concentram
+  os botões usados com menos frequência) e barra inferior (legenda +
+  dica de uso) — em vez de 8+ botões soltos numa linha só.
+- BOTÃO FECHAR: virou um "✕" discreto no canto, padrão de qualquer
+  janela, em vez de um botão de texto "Fechar".
+
+Testado: as 4 validações do modo Conectar (relação válida, duplicata,
+auto-relação, ciclo) e a conversão árvore→itens da importação JSON,
+isoladamente, fora do navegador.
+
+NAVEGAÇÃO E INSPEÇÃO (v3.4)
+-------------------------------
+- Barra lateral renomeada: "Dashboard" → "Início", "Árvore do Site" →
+  "Hierarquias" (e o card interno "Árvore hierárquica" foi alinhado para
+  "Hierarquias", pra não ficar um nome na barra e outro dentro da página).
+- CORREÇÃO: trocar de guia (aba) num lugar não reiniciava mais a guia
+  aberta em outro lugar — antes, qualquer clique numa aba limpava TODAS
+  as abas do documento inteiro, inclusive de outro grupo. Agora cada
+  grupo de guias é isolado pelo seu container.
+- NOVO: setas ‹ › de "Anterior/Próximo" ao final de toda barra de guias
+  (Detalhes do item E a nova Inspeção) — não precisa clicar na aba exata,
+  só ir avançando. Desabilitam automaticamente nas pontas.
+- INSPEÇÃO GERAL DO SITE — ganhou guias próprias:
+    • Visão Geral: a tabela que já existia, sem mudanças de lógica.
+    • Checklist: TODOS os pontos de inspeção de TODOS os itens do site,
+      num só lugar — status editável ali mesmo (sem abrir o item), com
+      filtro por status, exclusão e um formulário pra adicionar um novo
+      ponto a qualquer item sem trocar de tela.
+    • Evidências: TODAS as fotos de TODOS os itens do site, na mesma
+      vitrine usada no item (sem botão de excluir aqui de propósito —
+      fica só no item, pra não confundir numa tela densa).
+  Todo o conteúdo (linhas de tabela, fotos) é clicável e abre o item
+  correspondente direto em Hierarquias.
+- NOVO — "📋 Gerar Laudo Técnico": diferente do Prontuário (que é o
+  inventário completo), o Laudo é um parecer técnico formal: objetivo,
+  metodologia, resumo quantitativo, não conformidades com recomendação
+  automática por criticidade (ação imediata / programada / monitoramento),
+  parecer conclusivo e bloco de assinatura. PDF via jsPDF + autoTable,
+  mesmo padrão visual do Prontuário.
+- Removido da Inspeção (sem perda): o botão "Gerar relatório técnico"
+  duplicava o que já existe em Relatórios → "Montar relatório na tela".
+
+EXCEL COMO MODELO PADRÃO (v3.4)
+-----------------------------------
+A exportação Excel ganhou uma aba "Leia-me (modelo)" como primeira aba do
+arquivo, documentando o contrato da planilha: o que cada aba contém, qual
+é a coluna-chave de cada uma, e os valores aceitos (Criticidade, Status do
+Checklist, Tipo de relação). Pensada para servir de base a uma futura
+importação de planilhas com a mesma estrutura — a importação em si ainda
+não foi construída, fica como próximo passo natural quando for útil.
+
+SEUS DADOS
+----------
+Ficam salvos no próprio navegador (localStorage), salvos automaticamente.
+Use "Exportar backup JSON" na aba Relatórios para guardar uma cópia segura,
+e "Importar backup JSON" para restaurar.
+
+PRÓXIMA FASE
+------------
+Veja o documento "Arquitetura_Fase2_Inventario.docx" para o desenho do
+backend profissional (FastAPI + banco de dados) e da integração com o
+RAG do ScaleResolution.

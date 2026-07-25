@@ -1,0 +1,15 @@
+{
+  "name": "sispro-connector",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Conector SisPro → Postgres (Grafana)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "ingest": "node cli.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}

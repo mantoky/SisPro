@@ -1,0 +1,23 @@
+# Secrets / local env
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+*.log
+
+# Docker volumes / local data
+postgres-data/
+grafana-data/
+data/
+*.sql.gz

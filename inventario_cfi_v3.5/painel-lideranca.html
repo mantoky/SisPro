@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b3d32" />
+  <title>SisPro — Painel de Liderança</title>
+  <link rel="stylesheet" href="css/painel-lideranca.css" />
+</head>
+<body class="kiosk">
+  <header class="kiosk-top">
+    <div>
+      <p class="eyebrow">SisPro Platform · CFI Serviços</p>
+      <h1 id="kioskTitle">Painel de Liderança</h1>
+    </div>
+    <div class="kiosk-actions">
+      <button type="button" id="btnFullscreen" class="k-btn">Tela cheia</button>
+      <a class="k-btn ghost" href="index.html">Voltar ao SisPro</a>
+    </div>
+  </header>
+
+  <section id="viewRegions" class="kiosk-view active">
+    <p class="lead">Escolha a regional para espelhar na TV / totem.</p>
+    <div id="regionGrid" class="tile-grid"></div>
+  </section>
+
+  <section id="viewSites" class="kiosk-view">
+    <div class="crumb">
+      <button type="button" class="k-link" data-back="regions">← Regionais</button>
+      <span id="crumbRegion">—</span>
+    </div>
+    <p class="lead">Selecione um site para navegar a hierarquia.</p>
+    <div id="siteGrid" class="tile-grid"></div>
+  </section>
+
+  <section id="viewHierarchy" class="kiosk-view">
+    <div class="crumb">
+      <button type="button" class="k-link" data-back="sites">← Sites</button>
+      <span id="crumbSite">—</span>
+    </div>
+    <div class="hierarchy-layout">
+      <aside class="hierarchy-side">
+        <h2>Camadas</h2>
+        <div id="folderTree" class="folder-tree" role="tree"></div>
+      </aside>
+      <article class="hierarchy-detail card-xl" id="assetDetail">
+        <p class="muted">Toque numa pasta à esquerda para ver o detalhe.</p>
+      </article>
+    </div>
+  </section>
+
+  <footer class="kiosk-foot">
+    <span>Modo totem · interação por toque · sem mapa mental</span>
+    <span id="clock">—</span>
+  </footer>
+
+  <script src="js/painel-lideranca.js"></script>
+</body>
+</html>

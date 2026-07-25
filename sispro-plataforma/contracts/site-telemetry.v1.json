@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cfi.servicos/sispro/contracts/site-telemetry.v1.json",
+  "title": "SisPro Site Telemetry v1",
+  "description": "Envelope leve para Grafana, painel de liderança e inbox Firestore. Sem blobs (fotos/PDF).",
+  "type": "object",
+  "required": ["schemaVersion", "orgId", "regionId", "site"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "orgId": { "type": "string", "examples": ["cfiservicos"] },
+    "regionId": { "type": "string", "examples": ["carajas"] },
+    "exportedAt": { "type": "string", "format": "date-time" },
+    "site": {
+      "type": "object",
+      "required": ["id", "codigo", "nome"],
+      "properties": {
+        "id": { "type": "string" },
+        "codigo": { "type": "string" },
+        "nome": { "type": "string" },
+        "criticidade": { "type": "string" },
+        "statusOperacional": { "type": "string" },
+        "prontuarioStatus": {
+          "type": "string",
+          "enum": [
+            "rascunho",
+            "em_campo",
+            "enviado_pelo_tecnico",
+            "em_revisao",
+            "concluido",
+            "devolvido_campo"
+          ]
+        },
+        "localInstalacao": { "type": "string" },
+        "centroTrabalho": { "type": "string" },
+        "latitude": { "type": "string" },
+        "longitude": { "type": "string" },
+        "itensCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "nome"],
+        "properties": {
+          "id": { "type": "string" },
+          "parentId": { "type": ["string", "null"] },
+          "nome": { "type": "string" },
+          "categoria": { "type": "string" },
+          "tipo": { "type": "string" },
+          "criticidade": { "type": "string" },
+          "depth": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

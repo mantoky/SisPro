@@ -1,0 +1,57 @@
+# SisPro Platform — piloto Grafana + Postgres + Connector
+# Uso: docker compose up -d --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sispro-postgres
+    environment:
+      POSTGRES_USER: sispro
+      POSTGRES_PASSWORD: sispro_piloto
+      POSTGRES_DB: sispro
+    ports:
+      - "5432:5432"
+    volumes:
+      - sispro_pg_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sispro -d sispro"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  connector:
+    build: ./connector
+    container_name: sispro-connector
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://sispro:sispro_piloto@postgres:5432/sispro
+      PORT: "3080"
+    ports:
+      - "3080:3080"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: sispro-grafana
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: http://localhost:3000
+      GF_INSTALL_PLUGINS: ""
+    ports:
+      - "3000:3000"
+    volumes:
+      - sispro_grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+volumes:
+  sispro_pg_data:
+  sispro_grafana_data:

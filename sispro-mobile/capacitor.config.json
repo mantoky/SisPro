@@ -1,0 +1,17 @@
+{
+  "appId": "br.com.cfiservicos.sispro",
+  "appName": "SisPro",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "body"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#063f31"
+    }
+  }
+}

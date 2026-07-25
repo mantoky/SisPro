@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- CSP (F0.1a): trava os vetores de alto impacto sem quebrar o app offline.
+     'unsafe-inline' em script/style é necessário por causa dos handlers/style
+     inline estáticos do index.html (sem dados de usuário). Bloqueia scripts
+     externos, plugins, frames, base-tag hijacking e conexões externas. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; connect-src 'self' http://localhost:3080 http://127.0.0.1:3080 http://localhost:* http://127.0.0.1:* https://sispro.techartsolucoes.com.br https://*.techartsolucoes.com.br" />
+<title>SisPro - Sitema de Prontuário de Sites</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CFI</div>
+      <div>
+        <strong>Inventário Telecom</strong>
+        <small id="appVersionLabel">CFI Serviços</small>
+      </div>
+    </div>
+    <div class="sidebar-nav-wrap">
+      <div class="nav-title">Acesso rápido</div>
+      <div class="explorer-quick">
+        <button class="nav-btn active" data-view="dashboard"><span>●</span> Início</button>
+        <button class="nav-btn" data-view="inventario"><span>●</span> Hierarquias</button>
+        <button class="nav-btn" data-view="inspecao"><span>●</span> Inspeção</button>
+        <button class="nav-btn" data-view="relatorios"><span>●</span> Relatórios</button>
+        <button class="nav-btn" data-view="seguranca"><span>●</span> Segurança</button>
+        <a class="nav-btn" href="painel-lideranca.html" title="Totem / TV — painel de liderança"><span>●</span> Painel liderança</a>
+      </div>
+      <div class="nav-title">Inventário (rede)</div>
+      <div id="sidebarTree" class="explorer-tree" role="tree" aria-label="Árvore de sites e itens"></div>
+    </div>
+    <div class="autosave-indicator">
+      <span class="dot"></span> Status: <span id="autosaveStatus">—</span>
+    </div>
+    <div class="autosave-indicator">
+      <span class="dot"></span> Armazenamento: <span id="storageStatus" class="status ok" style="padding:2px 7px">—</span>
+    </div>
+    <div class="rights">
+      <strong>Proteção de direitos</strong><br>
+      Projeto constituído e desenvolvido pela CFI Serviços. Estrutura preparada para controle de acesso, logs, LGPD e proteção de dados primários de código.
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="title">
+        <h1>SisPro - Sitema de Prontuário de Sites</h1>
+      </div>
+      <button type="button" class="icon-btn topbar-settings" id="btnAppSettings" onclick="openAppSettings()" title="Configurações" aria-label="Configurações">⚙</button>
+    </div>
+
+    <!-- ================= INÍCIO / DASHBOARD ================= -->
+    <section id="dashboard" class="view">
+      <!-- Barra de sites (topo do Início) -->
+      <div class="card site-bar">
+        <div class="btn-row" style="align-items:center;flex-wrap:wrap;gap:8px">
+          <span class="muted" style="font-weight:600">Lista de sites</span>
+          <select id="siteSelector" style="max-width:340px"></select>
+          <input id="buscaSite" class="site-search" placeholder="🔍 Pesquisar Site..." />
+          <button class="btn secondary" onclick="openNovoSiteModal()">+ Criar Site</button>
+          <button class="btn secondary" onclick="triggerImportJSON()">⬆ Importar Site</button>
+          <button class="btn secondary" onclick="vaultTriggerImportInbox()">⬇ Inbox campo</button>
+          <button class="btn secondary" onclick="openCloneModal()">Duplicar site</button>
+          <button class="btn secondary" onclick="vaultRevealInstructions()">📂 Pasta do site</button>
+          <button class="btn danger" onclick="excluirSiteAtual()">🗑️ Excluir site</button>
+        </div>
+      </div>
+
+      <!-- Guia recolhível: Mapa mental do projeto (libera espaço quando colapsada) -->
+      <details class="card home-guide" id="homeMindMapGuide" open>
+        <summary class="home-guide-summary" title="Recolher / expandir guia">
+          <h2>Mapa mental do projeto</h2>
+          <div class="btn-row home-guide-actions" onclick="event.stopPropagation()">
+            <button type="button" class="btn secondary" onclick="openMindMapModal()">🧠 Mapa mental completo</button>
+          </div>
+          <span class="home-guide-caret" aria-hidden="true">▾</span>
+        </summary>
+        <div class="home-guide-body">
+          <div class="mindmap"><div class="map-wrap" id="mindMap"></div></div>
+        </div>
+      </details>
+
+      <!-- Editar site ativo -->
+      <div class="card">
+        <div class="section-title">
+          <h2>Editar site ativo</h2>
+          <div class="btn-row" style="gap:8px;flex-wrap:wrap">
+            <span id="siteStatusBadge" class="status ok">● Operacional</span>
+            <span id="prontuarioStatusBadge" class="status">📋 Rascunho</span>
+          </div>
+        </div>
+        <div class="field"><label>Nome do site</label><input id="siteNome" value="LTE MORRO ALFA"></div>
+        <div class="split">
+          <div class="field"><label>Código</label><input id="siteCodigo" value="LTE-MA01"></div>
+          <div class="field"><label>Local de Instalação</label><input id="siteLocalInstalacao" placeholder="Ex.: FECJ-APD-TEL-REDTI-AB_16"></div>
+        </div>
+        <div class="split">
+          <div class="field"><label>Centro de Trabalho</label><input id="siteCentroTrabalho" placeholder="Ex.: LTE-CAR"></div>
+          <div class="field"><label>Criticidade</label>
+            <select id="siteCriticidade"><option>Alta</option><option>Média</option><option>Baixa</option><option>Crítica</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Status operacional</label>
+          <select id="siteStatusOperacional">
+            <option>Operacional</option><option>Operacional com restrição</option><option>Em implantação</option>
+            <option>Em manutenção</option><option>Indisponível</option><option>Desativado</option>
+          </select>
+        </div>
+        <div class="split">
+          <div class="field"><label>Latitude</label><input id="siteLat" value="-6.080000"></div>
+          <div class="field"><label>Longitude</label><input id="siteLng" value="-50.150000"></div>
+        </div>
+        <div class="field"><label>Resumo operacional</label><textarea id="siteResumo">Site fictício de telecom crítica com LTE, MW, energia AC/DC, SPDA, abrigo técnico, torre autoportante e sistema irradiante.</textarea></div>
+        <div class="btn-row">
+          <button class="btn" onclick="saveSite()">Salvar alterações</button>
+          <button class="btn warn" onclick="exportJSON()">Backup JSON</button>
+        </div>
+        <div class="btn-row" style="margin-top:10px;flex-wrap:wrap">
+          <button class="btn secondary" onclick="vaultEnviarParaRevisao()">⬆ Enviar p/ revisão</button>
+          <button class="btn secondary" onclick="vaultGestorEmRevisao()">👁 Em revisão</button>
+          <button class="btn" onclick="vaultGestorConcluir()">✓ Concluir prontuário</button>
+          <button class="btn danger" onclick="vaultGestorDevolver()">↩ Devolver ao campo</button>
+          <button class="btn secondary" onclick="vaultProvisionSite(activeSite())">↻ Atualizar pasta cofre</button>
+          <button class="btn" onclick="platformPublishToGrafana()">☁ Publicar no Grafana</button>
+          <button class="btn secondary" onclick="platformPublishToGrafana({ onlyActive: true })">☁ Só site ativo</button>
+        </div>
+        <p class="muted" style="margin-top:8px">Cofre SisPro_Data: metadados e documentos no disco (PC/VPS). Conector → Postgres/Grafana (porta 3080). Só o gestor conclui o prontuário após o envio do técnico.</p>
+      </div>
+    </section>
+
+    <!-- ================= ÁRVORE / INVENTÁRIO ================= -->
+    <section id="inventario" class="view hidden">
+      <div class="layout">
+        <div class="card arvore-card">
+          <div class="section-title">
+            <h2>Hierarquias</h2>
+            <div class="btn-row">
+              <button class="btn secondary" onclick="openMindMapModal()">🧠 Mapa mental</button>
+              <button class="btn secondary" onclick="addChildAtFocus()">+ Item</button>
+            </div>
+          </div>
+          <div id="arvoreBreadcrumb" class="breadcrumb"></div>
+          <div class="field" style="margin-bottom:10px">
+            <input id="buscaArvore" placeholder="🔍 Buscar por nome, categoria, tipo ou criticidade...">
+          </div>
+          <div id="tree" class="tree"></div>
+        </div>
+        <div id="itemSheet" class="item-sheet">
+          <div class="item-sheet-bar">
+            <span class="item-sheet-handle" aria-hidden="true"></span>
+            <button class="item-sheet-close" type="button" onclick="deselectItem()" aria-label="Fechar detalhe" title="Fechar">✕</button>
+          </div>
+          <div class="card">
+            <div class="section-title"><h2>Detalhes do item</h2><span id="itemStatusBadge" class="status warn">● Nenhum item selecionado</span></div>
+            <div id="itemEmpty"><p class="muted">Selecione um item na árvore para visualizar atributos, dependências, checklist e histórico.</p></div>
+            <div id="itemDetails" class="hidden">
+              <div class="tabs">
+                <button class="tab active" data-panel="dados">Dados</button>
+                <button class="tab" data-panel="atributos">Atributos</button>
+                <button class="tab" data-panel="dependencias">Dependências</button>
+                <button class="tab" data-panel="checklist">Checklist</button>
+                <button class="tab" data-panel="evidencias">Evidências</button>
+                <button class="tab" data-panel="circuitos">Circuitos</button>
+              </div>
+
+              <div id="dados" class="panel active">
+                <div class="split">
+                  <div class="field"><label>Nome</label><input id="detailNome"></div>
+                  <div class="field"><label>Categoria</label><input id="detailCategoria" list="catalogoCategoria"></div>
+                </div>
+                <div class="split">
+                  <div class="field"><label>Tipo</label><input id="detailTipo" list="catalogoTipo"></div>
+                  <div class="field"><label>Criticidade</label>
+                    <select id="detailCriticidade"><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
+                  </div>
+                </div>
+                <div class="field"><label>Descrição</label><textarea id="detailDescricao"></textarea></div>
+                <div class="btn-row">
+                  <button class="btn" onclick="updateSelectedItem()">Salvar item</button>
+                  <button class="btn danger" onclick="deleteSelectedItem()">Excluir item</button>
+                </div>
+              </div>
+
+              <div id="atributos" class="panel">
+                <div class="split">
+                  <div class="field"><label>Novo atributo</label><input id="attrNome" placeholder="Ex.: Altura"></div>
+                  <div class="field"><label>Valor</label><input id="attrValor" placeholder="Ex.: 42 m"></div>
+                </div>
+                <button class="btn secondary" onclick="addAttribute()">Adicionar atributo</button>
+                <div id="attrList" class="pill-list"></div>
+              </div>
+
+              <div id="dependencias" class="panel">
+                <div class="split">
+                  <div class="field"><label>Tipo de relação</label>
+                    <select id="depTipo">
+                      <option>depende_de</option><option>alimenta</option><option>protege</option>
+                      <option>suporta</option><option>monitora</option><option>impacta</option>
+                      <option>conecta_com</option><option>refrigera</option><option>aterra</option>
+                    </select>
+                  </div>
+                  <div class="field"><label>Item relacionado</label>
+                    <select id="depItemSelect"></select>
+                  </div>
+                </div>
+                <button class="btn secondary" onclick="addDependency()">Adicionar dependência</button>
+                <div id="depList" class="pill-list"></div>
+              </div>
+
+              <div id="checklist" class="panel">
+                <div class="split">
+                  <div class="field"><label>Novo ponto de inspeção</label><input id="checkText" placeholder="Ex.: Sem oxidação aparente"></div>
+                  <div class="field"><label>Status</label>
+                    <select id="checkStatus"><option>Conforme</option><option>Não conforme</option><option>Não aplicável</option><option>Não inspecionado</option></select>
+                  </div>
+                </div>
+                <button class="btn secondary" onclick="addChecklist()">Adicionar ao checklist</button>
+                <div id="checkList" class="pill-list"></div>
+              </div>
+
+              <div id="evidencias" class="panel">
+                <p class="muted">Anexe fotos de inspeção. As imagens são redimensionadas automaticamente para economizar espaço e ficam salvas junto ao backup.</p>
+                <button class="btn secondary" onclick="triggerFotoUpload()">📷 Anexar foto(s)</button>
+                <input type="file" id="fotoInput" accept="image/*" multiple class="hidden" onchange="onFotoSelected(this)">
+                <div id="fotoList" class="foto-grid"></div>
+              </div>
+
+              <div id="circuitos" class="panel">
+                <p class="muted">Circuitos físicos que envolvem este item — endereçamento do caminho (ativo → quadro → DJ → posição → bitola). Toque em "Ver mapa" para ver a sequência.</p>
+                <div class="btn-row">
+                  <button class="btn secondary" onclick="openCircuitoModalForCurrent()">+ Novo circuito deste item</button>
+                </div>
+                <div id="circuitoList" class="pill-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button id="fabAddChild" class="fab" type="button" onclick="addChildAtFocus()" title="Adicionar filho neste nível" aria-label="Adicionar filho neste nível">＋</button>
+    </section>
+
+    <!-- ================= INSPEÇÃO ================= -->
+    <section id="inspecao" class="view hidden">
+      <div class="card">
+        <div class="section-title">
+          <h2>Inspeção geral do site</h2>
+          <div class="btn-row">
+            <button class="btn secondary" onclick="gerarPendencias()">Atualizar pendências</button>
+            <button class="btn" onclick="gerarLaudoTecnico()">📋 Gerar Laudo Técnico</button>
+          </div>
+        </div>
+
+        <div id="inspecaoTabsWrap">
+          <div class="tabs">
+            <button class="tab active" data-panel="inspVisaoGeral">Visão Geral</button>
+            <button class="tab" data-panel="inspChecklist">Checklist</button>
+            <button class="tab" data-panel="inspEvidencias">Evidências</button>
+          </div>
+
+          <div id="inspVisaoGeral" class="panel active">
+            <p class="muted" style="margin-top:0">Um item por linha. Clique numa linha para abrir o item em Hierarquias.</p>
+            <div class="table-wrap">
+              <table id="inspectionTable">
+                <thead><tr><th>Item</th><th>Categoria</th><th>Criticidade</th><th>Status inspeção</th><th>Pendência</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="inspChecklist" class="panel">
+            <p class="muted" style="margin-top:0">Todos os pontos de inspeção cadastrados em qualquer item do site, num só lugar — sem precisar abrir item por item.</p>
+            <div class="split">
+              <div class="field"><label>Item</label><select id="inspChecklistItemSelect"></select></div>
+              <div class="field"><label>Status inicial</label>
+                <select id="inspChecklistStatusNovo"><option>Não inspecionado</option><option>Conforme</option><option>Não conforme</option><option>Não aplicável</option></select>
+              </div>
+            </div>
+            <div class="field"><label>Novo ponto de inspeção</label><input id="inspChecklistTexto" placeholder="Ex.: Sem oxidação aparente"></div>
+            <button class="btn secondary" onclick="addChecklistGlobal()">Adicionar ao checklist do site</button>
+
+            <div class="btn-row" style="margin:16px 0 8px">
+              <select id="inspChecklistFiltro" onchange="renderInspecaoChecklist()">
+                <option value="">Filtrar: todos os status</option>
+                <option>Conforme</option><option>Não conforme</option><option>Não aplicável</option><option>Não inspecionado</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table id="inspChecklistTable">
+                <thead><tr><th>Item</th><th>Ponto de inspeção</th><th>Status</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="inspEvidencias" class="panel">
+            <p class="muted" style="margin-top:0">Todas as fotos de evidência cadastradas em qualquer item do site. Clique numa foto para ampliar.</p>
+            <div id="inspEvidenciasGrid" class="foto-grid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RELATÓRIOS ================= -->
+    <section id="relatorios" class="view hidden">
+      <div class="layout">
+        <div class="card">
+          <div class="section-title"><h2>Saídas disponíveis</h2><span class="status ok">● Funcional</span></div>
+          <div class="pill-list">
+            <span class="pill"><b>PDF</b> Prontuário técnico real</span>
+            <span class="pill"><b>Excel</b> Inventário completo e rastreável</span>
+            <span class="pill"><b>Impressão</b> Visão atual</span>
+            <span class="pill"><b>JSON</b> Backup / Restauração</span>
+          </div>
+          <p class="muted">O prontuário PDF reúne dados do site, inventário, atributos, dependências e checklist. O Excel inclui instruções, dados do site, Itens, Atributos, Dependências, Checklist e trilha de Auditoria.</p>
+          <div class="btn-row">
+            <button class="btn" onclick="gerarPDF()">Gerar PDF do prontuário</button>
+            <button class="btn secondary" onclick="exportExcel()">Exportar Excel (.xlsx)</button>
+            <button class="btn warn" onclick="gerarRelatorio()">Montar relatório na tela</button>
+          </div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn secondary" onclick="exportJSON()">Exportar backup JSON</button>
+            <button class="btn secondary" onclick="triggerImportJSON()">Importar backup JSON</button>
+            <input type="file" id="importJsonInput" accept="application/json" class="hidden" onchange="importJSON(this)">
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title"><h2>Prévia do relatório</h2></div>
+          <textarea id="reportPreview" style="min-height:360px" readonly></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SEGURANÇA ================= -->
+    <section id="seguranca" class="view hidden">
+      <div class="card">
+        <div class="section-title"><h2>Controle, integridade e proteção de direitos</h2><span class="status ok">● Proteção local ativa</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Camada</th><th>Regra proposta</th><th>Aplicação no app</th></tr></thead>
+            <tbody>
+              <tr><td>Autenticação</td><td>Usuário e senha com sessão expirada</td><td>Bloquear acesso não autorizado ao inventário.</td></tr>
+              <tr><td>Perfil</td><td>Administrador, Editor Técnico, Inspetor, Leitor</td><td>Controlar criação, edição, exclusão e emissão de relatórios.</td></tr>
+              <tr><td>Logs</td><td>Registro local de alteração, usuário, data e item afetado</td><td>Implementado nesta versão.</td></tr>
+              <tr><td>Código</td><td>Separar regra primária, minificar e proteger distribuição</td><td>Evitar cópia indevida da lógica principal.</td></tr>
+              <tr><td>LGPD</td><td>Minimizar dados pessoais e aplicar consentimento quando aplicável</td><td>Evitar coleta desnecessária de dados pessoais.</td></tr>
+              <tr><td>Backup</td><td>Validação estrutural, de hierarquia e de dependências</td><td>Importações inconsistentes são bloqueadas.</td></tr>
+              <tr><td>Direitos</td><td>CFI Serviços como detentora do projeto constituído</td><td>Exibir termo e controlar uso interno/licenciado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted" style="margin-top:12px">A versão standalone protege a integridade dos dados e mantém auditoria local. Autenticação real, perfis com autorização e assinatura de backups permanecem planejados para a aplicação com servidor e banco de dados.</p>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <div class="section-title"><h2>Trilha de auditoria local</h2><span class="muted">100 eventos mais recentes</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data/hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Site</th><th>Detalhe</th></tr></thead>
+            <tbody id="auditTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ================= MODAL: NOVO ITEM ================= -->
+<div id="modalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="section-title"><h2>Novo item do inventário</h2><button class="btn danger" onclick="closeItemModal()">Fechar</button></div>
+    <div class="split">
+      <div class="field"><label>Nome</label><input id="newNome" placeholder="Ex.: Torre Autoportante 42m"></div>
+      <div class="field"><label>Categoria</label><input id="newCategoria" list="catalogoCategoria" placeholder="Ex.: Estrutura Vertical"></div>
+    </div>
+    <div class="split">
+      <div class="field"><label>Tipo</label><input id="newTipo" list="catalogoTipo" placeholder="Ex.: Torre Autoportante"></div>
+      <div class="field"><label>Criticidade</label>
+        <select id="newCriticidade"><option>Baixa</option><option>Média</option><option selected>Alta</option><option>Crítica</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Item pai</label><select id="newParent"></select></div>
+    <div class="field"><label>Descrição</label><textarea id="newDescricao" placeholder="Descrição funcional, física e operacional do item."></textarea></div>
+    <button class="btn" onclick="createItem()">Criar item</button>
+  </div>
+</div>
+
+<!-- ================= MODAL: NOVO SITE EM BRANCO ================= -->
+<div id="novoSiteModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="section-title"><h2>Novo site em branco</h2><button class="btn danger" onclick="closeNovoSiteModal()">Fechar</button></div>
+    <p class="muted">Cria a raiz do site; os demais itens são adicionados depois pela árvore hierárquica.</p>
+    <div class="field"><label>Nome do site</label><input id="novoSiteNomeInput" placeholder="Ex.: LTE MORRO BETA"></div>
+    <div class="field"><label>Código <span class="muted" style="text-transform:none;font-weight:400">— precisa ser exclusivo, nomeia os arquivos exportados</span></label><input id="novoSiteCodigoInput" placeholder="Ex.: LTE-MB02"></div>
+    <div class="field"><label>Local de Instalação</label><input id="novoSiteLocalInput" placeholder="Ex.: FECJ-APD-TEL-REDTI-AB_17"></div>
+    <button class="btn" onclick="confirmNovoSite()">Criar site</button>
+  </div>
+</div>
+
+<!-- ================= MODAL: COPIAR SITE MODELO ================= -->
+<div id="cloneModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="section-title"><h2>Copiar site modelo</h2><button class="btn danger" onclick="closeCloneModal()">Fechar</button></div>
+    <p class="muted">Todos os itens, atributos e dependências do site atual serão mantidos, sob um novo nome e código.</p>
+    <div class="field"><label>Nome do novo site</label><input id="cloneNomeInput" placeholder="Ex.: LTE MORRO BETA"></div>
+    <div class="field"><label>Código do novo site</label><input id="cloneCodigoInput" placeholder="Ex.: LTE-MB02"></div>
+    <div class="field"><label>Local de Instalação</label><input id="cloneLocalInput" placeholder="Ex.: FECJ-APD-TEL-REDTI-AB_17"></div>
+    <button class="btn" onclick="confirmClone()">Confirmar cópia</button>
+  </div>
+</div>
+
+<!-- ================= MODAL: MAPA MENTAL COMPLETO (editor CAD) ================= -->
+<div id="mindMapModalBackdrop" class="modal-backdrop">
+  <div class="modal modal-wide mm-editor mm-vale">
+
+    <!-- Barra superior: título + ações de janela -->
+    <div class="toolbar-top mm-editor-header">
+      <div>
+        <h2 class="toolbar-title mm-editor-title">MAPA EDITOR - <span id="mmSiteNome"></span></h2>
+      </div>
+      <div class="toolbar-top-acoes">
+        <button class="icon-btn" id="mmBtnDesfazer" onclick="mmUndo()" disabled title="Desfazer (Ctrl+Z)">↩️</button>
+        <button class="icon-btn" id="mmBtnRefazer" onclick="mmRedo()" disabled title="Refazer (Ctrl+Y)">↪️</button>
+        <div class="mm-appear-tab-wrap mm-guide-right" data-guide="legenda">
+          <button type="button" class="mm-appear-tab" id="mmLegendaTab" onclick="mmToggleGuidePopup('legenda', event)" aria-expanded="false" aria-controls="mmLegendaPopup">
+            Legenda <span class="mm-appear-caret">▾</span>
+          </button>
+          <div id="mmLegendaPopup" class="mm-appear-popup mm-popup-legenda" role="dialog" aria-label="Legenda do mapa mental" hidden>
+            <div class="mm-appear-popup-head">
+              <strong>Legenda</strong>
+              <button type="button" class="icon-btn-close" onclick="mmCloseAllGuidePopups()" title="Fechar" aria-label="Fechar">✕</button>
+            </div>
+            <div class="mm-appear-popup-body">
+              <div class="pill-list mm-legenda-list" id="mmLegenda"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mm-appear-tab-wrap mm-guide-right" data-guide="ajuda">
+          <button type="button" class="mm-appear-tab" id="mmAjudaTab" onclick="mmToggleGuidePopup('ajuda', event)" aria-expanded="false" aria-controls="mmAjudaPopup">
+            Ajuda <span class="mm-appear-caret">▾</span>
+          </button>
+          <div id="mmAjudaPopup" class="mm-appear-popup mm-popup-ajuda" role="dialog" aria-label="Ajuda do mapa editor" hidden>
+            <div class="mm-appear-popup-head">
+              <strong>Como editar o mapa mental</strong>
+              <button type="button" class="icon-btn-close" onclick="mmCloseAllGuidePopups()" title="Fechar" aria-label="Fechar">✕</button>
+            </div>
+            <div class="mm-appear-popup-body mm-ajuda-body">
+              <div class="mm-ajuda-block">
+                <h4>Seleção e foco</h4>
+                <ul>
+                  <li>Clique num nó do canvas para focá-lo (anel de destaque).</li>
+                  <li>O Explorer lateral sincroniza com o nó focado — e o inverso também.</li>
+                  <li>Duplo-clique no nó (fora do modo Adicionar) renomeia inline (Enter confirma, Esc cancela).</li>
+                </ul>
+              </div>
+              <div class="mm-ajuda-block">
+                <h4>Modos de ferramenta (barra inferior)</h4>
+                <ul>
+                  <li><strong>Mover</strong> — arraste um nó e solte sobre outro para mudar o pai (hierarquia). A raiz do site não se move.</li>
+                  <li><strong>Link</strong> — clique origem → destino; cada extremidade recebe terminal, papel, fase, bitola etc. Vários links no mesmo par são permitidos. Categorias: Circuito, Serviço, Lógico, Dados.</li>
+                  <li><strong>Conectar</strong> — arraste para criar dependência semântica (ciclos bloqueados).</li>
+                  <li><strong>Adicionar</strong> — clique num nó-pai para criar um filho. O fundo do canvas nunca cria itens.</li>
+                </ul>
+              </div>
+              <div class="mm-ajuda-block">
+                <h4>Criar, excluir e ramos</h4>
+                <ul>
+                  <li><strong>Criar filho</strong> — botão no dock ou tecla Insert (com nó focado).</li>
+                  <li><strong>Excluir</strong> — botão no dock ou Delete; confirme no diálogo. Use Desfazer para reverter.</li>
+                  <li><strong>Copiar / Recortar / Colar</strong> — Ctrl+C / Ctrl+X / Ctrl+V no ramo focado.</li>
+                </ul>
+              </div>
+              <div class="mm-ajuda-block">
+                <h4>Navegação e Visualização</h4>
+                <ul>
+                  <li>Arraste o fundo para pan; roda do mouse faz zoom no cursor.</li>
+                  <li><strong>Zoom Pan</strong> — arrasta o display inteiro.</li>
+                  <li><strong>Zoom Realtime</strong> — arraste ↑ aproxima / ↓ afasta.</li>
+                  <li><strong>Zoom Window</strong> — arraste um retângulo na área a ampliar.</li>
+                  <li><strong>Zoom Extend</strong> — enquadra todo o modelo no display.</li>
+                  <li>Badge no canto do nó colapsa/expande a subárvore.</li>
+                </ul>
+              </div>
+              <div class="mm-ajuda-block">
+                <h4>Histórico e propriedades</h4>
+                <ul>
+                  <li><strong>Desfazer / Refazer</strong> — botões ↩️ ↪️ na barra superior ou Ctrl+Z / Ctrl+Y.</li>
+                  <li><strong>Propriedades</strong> — guia superior: TAG, fabricante, status, valor e classificação do nó focado.</li>
+                  <li><strong>Visualização</strong> — Zoom Pan, Realtime, Window e Extend no display do mapa.</li>
+                  <li><strong>Aparência</strong> — tema, tamanho dos nós, conectores e opções de exibição.</li>
+                  <li><strong>Saída</strong> — salvar, imprimir e exportar (PNG, PDF, JSON, Schema EAM).</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="mm-sep" aria-hidden="true"></span>
+        <button class="btn secondary btn-sm" onclick="mmAbrirDependencias()">🔗 Dependências</button>
+        <div class="mm-window-controls" role="group" aria-label="Controles da janela">
+          <button type="button" class="mm-win-btn" id="mmBtnMinimize" onclick="mmMinimizeWindow()" title="Minimizar" aria-label="Minimizar">−</button>
+          <button type="button" class="mm-win-btn" id="mmBtnMaximize" onclick="mmMaximizeWindow()" title="Maximizar" aria-label="Maximizar">+</button>
+          <button type="button" class="mm-win-btn mm-win-close" onclick="closeMindMapModal()" title="Fechar" aria-label="Fechar">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de guias: Propriedades | Saída | Aparência | Visualização (popup ao clicar) -->
+    <div class="mm-guide-bar mm-appear-bar" aria-label="Guias do mapa mental">
+
+      <div class="mm-appear-tab-wrap" data-guide="prop">
+        <button type="button" class="mm-appear-tab" id="mmPropTab" onclick="mmToggleGuidePopup('prop', event)" aria-expanded="false" aria-controls="mmPropPopup">
+          🎯 Propriedades <span class="mm-appear-caret">▾</span>
+        </button>
+        <div id="mmPropPopup" class="mm-appear-popup mm-popup-props" role="dialog" aria-label="Propriedades do nó" hidden>
+          <div class="mm-appear-popup-head">
+            <strong>Propriedades do nó</strong>
+            <button type="button" class="icon-btn-close" onclick="mmCloseAllGuidePopups()" title="Fechar" aria-label="Fechar">✕</button>
+          </div>
+          <div class="mm-appear-popup-body">
+            <p id="mmPropVazio" class="muted" style="margin:4px 0;font-size:12px">Clique num nó (canvas ou Explorer) para editar. Sync bidirecional ativa.</p>
+            <div id="mmPropForm" class="hidden">
+              <div class="mm-path-chip" id="mmPropPath" title="Path hierárquico">—</div>
+              <div class="field"><label>Nome / Label</label><input id="mmPropNome" maxlength="300"></div>
+              <div class="field"><label>TAG</label><input id="mmPropTag" maxlength="80" placeholder="Ex.: TRV11-QTA-01"></div>
+              <div class="field"><label>Fabricante</label><input id="mmPropFab" maxlength="120" placeholder="Ex.: Huawei"></div>
+              <div class="field"><label>Status Operacional</label>
+                <select id="mmPropStatus">
+                  <option>Operacional</option>
+                  <option>Operacional com restrição</option>
+                  <option>Em manutenção</option>
+                  <option>Indisponível</option>
+                  <option>Desativado</option>
+                  <option>Em implantação</option>
+                </select>
+              </div>
+              <div class="field"><label>Valor Depreciado</label><input id="mmPropValor" maxlength="40" placeholder="Ex.: R$ 12.500,00"></div>
+              <div class="mm-palette-sub">Classificação</div>
+              <div class="field"><label>Categoria</label><input id="mmPropCategoria" list="catalogoCategoria"></div>
+              <div class="field"><label>Tipo</label><input id="mmPropTipo" list="catalogoTipo"></div>
+              <div class="field"><label>Criticidade</label>
+                <select id="mmPropCrit"><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
+              </div>
+              <button class="btn btn-sm mm-btn-accent" style="width:100%" onclick="mmApplyProps()">Aplicar ao nó</button>
+              <button class="btn secondary btn-sm" style="width:100%;margin-top:6px" onclick="mmAbrirNoInventario()">Abrir no inventário ↗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mm-appear-tab-wrap" data-guide="saida">
+        <button type="button" class="mm-appear-tab" id="mmSaidaTab" onclick="mmToggleGuidePopup('saida', event)" aria-expanded="false" aria-controls="mmSaidaPopup">
+          📤 Saída <span class="mm-appear-caret">▾</span>
+        </button>
+        <div id="mmSaidaPopup" class="mm-appear-popup" role="dialog" aria-label="Saída e exportação" hidden>
+          <div class="mm-appear-popup-head">
+            <strong>Saída</strong>
+            <button type="button" class="icon-btn-close" onclick="mmCloseAllGuidePopups()" title="Fechar" aria-label="Fechar">✕</button>
+          </div>
+          <div class="mm-appear-popup-body">
+            <button class="dock-btn" onclick="mmSalvarProjeto()"><span>💾</span> Salvar projeto</button>
+            <button class="dock-btn" onclick="printMindMap()"><span>🖨️</span> Imprimir</button>
+            <button class="dock-btn" onclick="exportMindMapPNG()"><span>🖼️</span> Exportar PNG</button>
+            <button class="dock-btn" onclick="exportMindMapPDF()"><span>📄</span> Exportar PDF</button>
+            <button class="dock-btn" onclick="exportMindMapJSON()"><span>🗂️</span> Exportar JSON (árvore)</button>
+            <button class="dock-btn" onclick="exportTreeSchemaFile()"><span>📐</span> Exportar Schema EAM</button>
+            <button class="dock-btn" onclick="triggerImportMindMapJSON()"><span>📥</span> Importar JSON</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mm-appear-tab-wrap" data-guide="appear">
+        <button type="button" class="mm-appear-tab" id="mmAppearTab" onclick="mmToggleGuidePopup('appear', event)" aria-expanded="false" aria-controls="mmAppearPopup">
+          ⚙️ Aparência <span class="mm-appear-caret">▾</span>
+        </button>
+        <div id="mmAppearPopup" class="mm-appear-popup" role="dialog" aria-label="Controles de aparência" hidden>
+          <div class="mm-appear-popup-head">
+            <strong>Aparência do canvas</strong>
+            <button type="button" class="icon-btn-close" onclick="mmCloseAllGuidePopups()" title="Fechar" aria-label="Fechar">✕</button>
+          </div>
+          <div class="mm-appear-popup-body">
+            <div class="mm-appear-group">
+              <span class="mm-appear-label">Tema</span>
+              <div class="seg-toggle" id="mmCfgTema">
+                <button class="seg-btn active" data-tema="vale" onclick="mmEngineSetPref('tema','vale')">⛏ Vale</button>
+                <button class="seg-btn" data-tema="claro" onclick="mmEngineSetPref('tema','claro')">☀️ Claro</button>
+              </div>
+            </div>
+            <div class="mm-appear-group">
+              <span class="mm-appear-label">Nós</span>
+              <div class="seg-toggle" id="mmCfgTam">
+                <button class="seg-btn" data-tam="compacto" onclick="mmEngineSetPref('tamNo','compacto')">S</button>
+                <button class="seg-btn active" data-tam="normal" onclick="mmEngineSetPref('tamNo','normal')">M</button>
+                <button class="seg-btn" data-tam="grande" onclick="mmEngineSetPref('tamNo','grande')">L</button>
+              </div>
+            </div>
+            <div class="mm-appear-group">
+              <span class="mm-appear-label">Conector</span>
+              <div class="seg-toggle" id="mmCfgConector">
+                <button class="seg-btn active" data-con="curva" onclick="mmEngineSetPref('conector','curva')">Curva</button>
+                <button class="seg-btn" data-con="reta" onclick="mmEngineSetPref('conector','reta')">Reta</button>
+              </div>
+            </div>
+            <div class="mm-appear-group mm-appear-checks">
+              <label class="mm-switch"><input type="checkbox" id="mmCfgGrade" onchange="mmEngineSetPref('grade', this.checked)"><span>Grade</span></label>
+              <label class="mm-switch"><input type="checkbox" id="mmCfgMeta" onchange="mmEngineSetPref('mostrarMeta', this.checked)"><span>Rótulos técnicos</span></label>
+              <label class="mm-switch"><input type="checkbox" id="mmCfgBadge" onchange="mmEngineSetPref('mostrarBadge', this.checked)"><span>Contador de filhos</span></label>
+              <label class="mm-switch"><input type="checkbox" id="mmCfgIcone" onchange="mmEngineSetPref('mostrarIcone', this.checked)"><span>Ícones técnicos</span></label>
+            </div>
+            <button class="btn secondary btn-sm" style="width:100%;margin-top:4px" onclick="mmEngineResetPrefs()">Restaurar padrão Vale</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mm-appear-tab-wrap" data-guide="vista">
+        <button type="button" class="mm-appear-tab" id="mmVistaTab" onclick="mmToggleGuidePopup('vista', event)" aria-expanded="false" aria-controls="mmVistaPopup">
+          🔍 Visualização <span class="mm-appear-caret">▾</span>
+        </button>
+        <div id="mmVistaPopup" class="mm-appear-popup" role="dialog" aria-label="Ferramentas de visualização" hidden>
+          <div class="mm-appear-popup-head">
+            <strong>Visualização — Zoom</strong>
+            <button type="button" class="icon-btn-close" onclick="mmCloseAllGuidePopups()" title="Fechar" aria-label="Fechar">✕</button>
+          </div>
+          <div class="mm-appear-popup-body">
+            <p class="muted" style="margin:0 0 4px;font-size:11px">Ferramentas exclusivas do Display Model do mapa mental. Clique de novo na ferramenta ativa para desligar.</p>
+            <div class="mm-palette-sub">Zoom Display</div>
+            <div class="seg-toggle mm-view-tools" id="mmViewToolToggle">
+              <button type="button" class="seg-btn" data-viewtool="pan" onclick="mmSetViewTool('pan')">Zoom Pan</button>
+              <button type="button" class="seg-btn" data-viewtool="realtime" onclick="mmSetViewTool('realtime')">Zoom Realtime</button>
+              <button type="button" class="seg-btn" data-viewtool="window" onclick="mmSetViewTool('window')">Zoom Window</button>
+              <button type="button" class="seg-btn" data-viewtool="extend" onclick="mmSetViewTool('extend')">Zoom Extend</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Área de trabalho: canvas (centro) + dock de ferramentas (direita) -->
+    <div class="mm-workspace">
+      <div class="canvas-tool-wrap mm-canvas-area">
+        <div id="mindMapFull" class="canvas-tool"></div>
+      </div>
+
+      <aside class="mm-dock" aria-label="Paleta de construção do mapa mental">
+        <div class="mm-dock-title" role="heading" aria-level="2">Construção</div>
+
+        <details open class="mm-palette">
+          <summary>✏️ Desenho</summary>
+          <div class="mm-palette-body">
+            <button class="dock-btn" onclick="mmAddChild()"><span>➕</span> Criar filho <kbd>Insert</kbd></button>
+            <button class="dock-btn" onclick="mmRenameFocused()"><span>🔤</span> Renomear <kbd>F2</kbd></button>
+            <button class="dock-btn" onclick="mmDeleteFocused()"><span>🗑️</span> Excluir nó <kbd>Del</kbd></button>
+          </div>
+        </details>
+
+        <details open class="mm-palette">
+          <summary>📋 Área de transferência</summary>
+          <div class="mm-palette-body">
+            <button class="dock-btn" onclick="mmCopy()"><span>📋</span> Copiar ramo <kbd>Ctrl+C</kbd></button>
+            <button class="dock-btn" onclick="mmCut()"><span>✂️</span> Recortar ramo <kbd>Ctrl+X</kbd></button>
+            <button class="dock-btn" onclick="mmPaste()"><span>📎</span> Colar no focado <kbd>Ctrl+V</kbd></button>
+          </div>
+        </details>
+
+      </aside>
+    </div>
+
+    <!-- Barra de ferramentas inferior: modos + links + zoom -->
+    <div class="mm-toolbar" aria-label="Barra de ferramentas do mapa mental">
+      <div class="mm-toolbar-group" aria-label="Modo de ferramenta">
+        <div class="seg-toggle" id="mmModoToggle">
+          <button type="button" class="seg-btn active" data-modo="mover" onclick="mmSetModo('mover')">Mover</button>
+          <button type="button" class="seg-btn" data-modo="linkar" onclick="mmSetModo('linkar')">Link</button>
+          <button type="button" class="seg-btn" data-modo="conectar" onclick="mmSetModo('conectar')">Conectar</button>
+          <button type="button" class="seg-btn" data-modo="adicionar" onclick="mmSetModo('adicionar')">Adicionar</button>
+        </div>
+      </div>
+      <span class="mm-toolbar-sep" aria-hidden="true"></span>
+      <div class="mm-toolbar-group" aria-label="Categoria do conector">
+        <div class="seg-toggle" id="mmLinkCatToggle">
+          <button type="button" class="seg-btn active" data-linkcat="circuito_eletrico" onclick="mmSetLinkCategoria('circuito_eletrico')">Circuito</button>
+          <button type="button" class="seg-btn" data-linkcat="servico" onclick="mmSetLinkCategoria('servico')">Serviço</button>
+          <button type="button" class="seg-btn" data-linkcat="logico" onclick="mmSetLinkCategoria('logico')">Lógico</button>
+          <button type="button" class="seg-btn" data-linkcat="dados" onclick="mmSetLinkCategoria('dados')">Dados</button>
+        </div>
+      </div>
+      <span class="mm-toolbar-sep" aria-hidden="true"></span>
+      <div class="mm-toolbar-group" aria-label="Zoom do display">
+        <div class="seg-toggle" id="mmZoomBarToggle">
+          <button type="button" class="seg-btn" data-viewtool="pan" onclick="mmSetViewTool('pan')">Zoom Pan</button>
+          <button type="button" class="seg-btn" data-viewtool="realtime" onclick="mmSetViewTool('realtime')">Zoom Realtime</button>
+          <button type="button" class="seg-btn" data-viewtool="window" onclick="mmSetViewTool('window')">Zoom Window</button>
+          <button type="button" class="seg-btn" data-viewtool="extend" onclick="mmSetViewTool('extend')">Zoom Extend</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<input type="file" id="mmImportInput" accept="application/json" class="hidden" onchange="handleImportMindMapJSON(event)">
+
+<!-- ================= MODAL: CRIAR DEPENDÊNCIA (arraste em modo Conectar) ================= -->
+<div id="mmConectarModalBackdrop" class="modal-backdrop" style="z-index:30">
+  <div class="modal">
+    <div class="section-title"><h2>Criar dependência</h2><button class="icon-btn-close" onclick="mmCancelarConectar()" title="Fechar" aria-label="Fechar">✕</button></div>
+    <p class="muted" id="mmConectarResumo" style="margin-top:-8px"></p>
+    <div class="field"><label>Tipo de relação</label>
+      <select id="mmConectarTipo">
+        <option>depende_de</option><option>alimenta</option><option>protege</option>
+        <option>suporta</option><option>monitora</option><option>impacta</option>
+        <option>conecta_com</option><option>refrigera</option><option>aterra</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="mmCancelarConectar()">Cancelar</button>
+      <button class="btn" onclick="mmConfirmarConectar()">Criar dependência</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: INTEGRAR GRAFO (!) filho/pai ================= -->
+<div id="mmIntegrateModalBackdrop" class="modal-backdrop" style="z-index:32">
+  <div class="modal modal-sm">
+    <div class="section-title">
+      <h2>Integrar grafo</h2>
+      <button class="icon-btn-close" onclick="mmCloseIntegratePopup()" title="Fechar" aria-label="Fechar">✕</button>
+    </div>
+    <p class="muted" style="margin-top:-8px">Grafo selecionado: <strong id="mmIntegrateNome"></strong></p>
+    <p class="muted" id="mmIntegrateAviso" hidden style="color:#f59e0b"></p>
+
+    <div class="field">
+      <label>Outro grafo</label>
+      <select id="mmIntegrateAlvo"></select>
+    </div>
+
+    <div class="field">
+      <label>Relação hierárquica</label>
+      <label class="mm-radio-row"><input type="radio" name="mmIntegratePapel" id="mmIntegratePapelFilho" value="filho" checked> Tornar este grafo <strong>filho</strong> do selecionado</label>
+      <label class="mm-radio-row"><input type="radio" name="mmIntegratePapel" id="mmIntegratePapelPai" value="pai"> Tornar este grafo <strong>pai</strong> do selecionado</label>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn secondary" onclick="mmCloseIntegratePopup()">Cancelar</button>
+      <button type="button" class="btn" onclick="mmConfirmarIntegrate()">Aplicar integração</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: LINK ENTRE GRAFOS (extremidades editáveis) ================= -->
+<div id="mmLinkModalBackdrop" class="modal-backdrop" style="z-index:31">
+  <div class="modal modal-sm mm-link-modal">
+    <div class="section-title">
+      <h2 id="mmLinkModalTitulo">Novo link entre grafos</h2>
+      <button class="icon-btn-close" onclick="mmCloseLinkModal()" title="Fechar" aria-label="Fechar">✕</button>
+    </div>
+    <p class="muted" id="mmLinkResumo" style="margin-top:-8px"></p>
+    <input type="hidden" id="mmLinkFromId">
+    <input type="hidden" id="mmLinkToId">
+
+    <div class="mm-link-grid">
+      <div class="field"><label>Nome do link</label><input id="mmLinkNome" placeholder="Ex.: Circuito QD-01 / DJ-3"></div>
+      <div class="field"><label>Categoria</label>
+        <select id="mmLinkCategoria">
+          <option value="circuito_eletrico">Circuito elétrico</option>
+          <option value="servico">Serviço</option>
+          <option value="logico">Lógico</option>
+          <option value="dados">Dados</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="field"><label>Tipo de ligação</label>
+        <select id="mmLinkTipo">
+          <option value="alimenta">alimenta</option>
+          <option value="depende_de">depende_de</option>
+          <option value="protege">protege</option>
+          <option value="suporta">suporta</option>
+          <option value="monitora">monitora</option>
+          <option value="impacta">impacta</option>
+          <option value="conecta_com">conecta_com</option>
+          <option value="refrigera">refrigera</option>
+          <option value="aterra">aterra</option>
+          <option value="outro">outro</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mm-link-ends">
+      <fieldset class="mm-link-end-card">
+        <legend>Extremidade origem (A)</legend>
+        <div class="field"><label>Papel</label><select id="mmLinkFromPapel"></select></div>
+        <div class="field"><label>Terminal / ponto</label><input id="mmLinkFromTerminal" placeholder="Ex.: DJ-03 · Bornes L1"></div>
+        <div class="field"><label>Posição</label><input id="mmLinkFromPosicao" placeholder="Ex.: QD-01 / fila 2"></div>
+        <div class="field"><label>Fase</label><input id="mmLinkFromFase" placeholder="Ex.: R S T / N"></div>
+        <div class="field"><label>Bitola</label><input id="mmLinkFromBitola" placeholder="Ex.: 16 mm²"></div>
+        <div class="field"><label>Observação</label><input id="mmLinkFromObs" placeholder="Dados do ponto A"></div>
+      </fieldset>
+      <fieldset class="mm-link-end-card">
+        <legend>Extremidade destino (B)</legend>
+        <div class="field"><label>Papel</label><select id="mmLinkToPapel"></select></div>
+        <div class="field"><label>Terminal / ponto</label><input id="mmLinkToTerminal" placeholder="Ex.: Entrada fonte"></div>
+        <div class="field"><label>Posição</label><input id="mmLinkToPosicao" placeholder="Ex.: Rack A / U12"></div>
+        <div class="field"><label>Fase</label><input id="mmLinkToFase" placeholder="Ex.: R"></div>
+        <div class="field"><label>Bitola</label><input id="mmLinkToBitola" placeholder="Ex.: 6 mm²"></div>
+        <div class="field"><label>Observação</label><input id="mmLinkToObs" placeholder="Dados do ponto B"></div>
+      </fieldset>
+    </div>
+
+    <div class="btn-row" style="margin-top:12px">
+      <button type="button" class="btn danger btn-sm" id="mmLinkBtnExcluir" hidden onclick="mmExcluirLinkModal()">Excluir link</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn secondary" onclick="mmCloseLinkModal()">Cancelar</button>
+      <button type="button" class="btn" onclick="mmSalvarLinkModal()">Salvar link</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: MAPA DE DEPENDÊNCIAS ================= -->
+<div id="depGraphModalBackdrop" class="modal-backdrop">
+  <div class="modal modal-wide">
+    <div class="section-title">
+      <h2>Mapa de Dependências — <span id="dgSiteNome"></span></h2>
+      <button class="btn danger" onclick="closeDepGraphModal()">Fechar</button>
+    </div>
+    <p class="muted" id="dgSiteResumo" style="margin:-8px 0 14px"></p>
+
+    <div class="btn-row" style="margin-bottom:12px">
+      <button class="btn secondary" onclick="dgZoom(-0.15)">− Zoom</button>
+      <button class="btn secondary" onclick="dgResetZoom()">Ajustar (100%)</button>
+      <button class="btn secondary" onclick="dgZoom(0.15)">+ Zoom</button>
+      <span style="flex:1"></span>
+      <button class="btn secondary" onclick="printDepGraph()">🖨️ Imprimir</button>
+      <button class="btn secondary" onclick="exportDepGraphPNG()">🖼️ Exportar PNG</button>
+      <button class="btn secondary" onclick="exportDepGraphPDF()">📄 Exportar PDF</button>
+      <button class="btn secondary" onclick="exportDepGraphJSON()">🗂️ Exportar JSON</button>
+    </div>
+
+    <div class="pill-list" id="dgLegenda" style="margin-bottom:12px"></div>
+
+    <div class="canvas-tool-wrap">
+      <div id="depGraphFull" class="canvas-tool"></div>
+    </div>
+    <p class="muted" style="margin-top:10px;font-size:12px">Clique em qualquer item do mapa para abri-lo direto na árvore do inventário. Itens sem nenhuma dependência registrada não aparecem aqui.</p>
+  </div>
+</div>
+
+<!-- ================= MODAL: VISUALIZAR FOTO ================= -->
+<div id="fotoModalBackdrop" class="modal-backdrop">
+  <div class="modal" style="text-align:center">
+    <div class="section-title"><h2>Evidência fotográfica</h2><button class="btn danger" onclick="fecharFotoModal()">Fechar</button></div>
+    <img id="fotoModalImg" alt="Evidência" style="max-width:100%;max-height:70vh;border-radius:12px">
+    <p id="fotoModalCaption" class="muted" style="margin-top:10px"></p>
+  </div>
+</div>
+
+<!-- ================= MODAL: CIRCUITO FÍSICO (endereçamento) ================= -->
+<div id="circuitoModalBackdrop" class="modal-backdrop" style="z-index:25">
+  <div class="modal">
+    <div class="section-title"><h2>Circuito físico</h2><button class="icon-btn-close" onclick="closeCircuitoModal()" title="Fechar" aria-label="Fechar">✕</button></div>
+    <div class="split">
+      <div class="field"><label>Nome</label><input id="circNome" placeholder="Ex.: Alimentação BBU-01"></div>
+      <div class="field"><label>Tipo</label>
+        <select id="circTipo">
+          <option value="alimentacao">Alimentação</option>
+          <option value="protecao">Proteção</option>
+          <option value="aterramento">Aterramento</option>
+          <option value="dados">Dados</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <p class="muted">Trechos na ORDEM FÍSICA (origem → destino). Cada trecho aponta para um item e carrega os atributos físicos daquele ponto (posição no quadro, disjuntor, bitola, fase, comprimento).</p>
+    <div id="circTrechos" class="circ-trechos"></div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn secondary" onclick="circAddTrecho()">+ Adicionar trecho</button>
+    </div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn secondary" onclick="closeCircuitoModal()">Cancelar</button>
+      <button class="btn" onclick="saveCircuitoModal()">Salvar circuito</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: MAPA DE CIRCUITO ================= -->
+<div id="circMapModalBackdrop" class="modal-backdrop">
+  <div class="modal modal-wide">
+    <div class="section-title">
+      <h2>Mapa de Circuito — <span id="cmCircNome"></span></h2>
+      <div class="btn-row">
+        <button class="btn secondary" onclick="exportCircMapPNG()">PNG</button>
+        <button class="btn secondary" onclick="exportCircMapPDF()">PDF</button>
+        <button class="btn danger" onclick="closeCircMapModal()">Fechar</button>
+      </div>
+    </div>
+    <p class="muted" id="cmResumo" style="margin:-8px 0 14px"></p>
+    <div class="canvas-tool-wrap"><div id="circMapFull" class="canvas-tool"></div></div>
+    <p class="muted" style="margin-top:10px;font-size:12px">O circuito é um caminho ordenado (esquerda → direita). Os rótulos em cada nó mostram posição, disjuntor, bitola e fase daquele ponto.</p>
+  </div>
+</div>
+
+<!-- ================= MODAL: CONFIRMAÇÃO GENÉRICA (substitui confirm()) ================= -->
+<div id="confirmModalBackdrop" class="modal-backdrop" style="z-index:30">
+  <div class="modal modal-sm">
+    <div class="section-title"><h2 id="confirmTitulo">Confirmação</h2></div>
+    <p id="confirmMensagem" style="white-space:pre-wrap;line-height:1.5;margin:4px 0 0"></p>
+    <div class="btn-row" style="margin-top:18px;justify-content:flex-end">
+      <button class="btn secondary" type="button" onclick="confirmarNao()">Cancelar</button>
+      <button class="btn" type="button" id="confirmOk" onclick="confirmarSim()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="catalogoCategoria"></datalist>
+<datalist id="catalogoTipo"></datalist>
+
+<!-- ================= MODAL: COFRE SisPro_Data ================= -->
+<div id="vaultSettingsModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="section-title"><h2>Cofre SisPro_Data</h2><button class="btn danger" onclick="vaultCloseSettings()">Fechar</button></div>
+    <p class="muted">Pasta raiz no PC ou VPS. A plataforma só guarda controle; fotos, PDFs e laudos ficam no disco, por site.</p>
+    <p id="vaultStatusText" class="muted" style="margin:8px 0"></p>
+    <div class="field"><label>Rótulo / caminho operacional</label><input id="vaultPathLabel" placeholder="Ex.: D:\SisPro_Data ou /data/sispro"></div>
+    <div class="btn-row" style="flex-wrap:wrap">
+      <button class="btn" type="button" onclick="vaultChooseFolderFromSettings()">Escolher pasta SisPro_Data</button>
+      <button class="btn secondary" type="button" onclick="vaultSavePathLabel()">Salvar rótulo</button>
+      <button class="btn secondary" type="button" onclick="vaultWriteRegistry().then(()=>toast('Índice atualizado.'))">Atualizar índice</button>
+    </div>
+    <p class="muted" style="margin-top:12px">Estrutura: <code>sites/{CODIGO}/00_meta · 01_fotos · 02_rodadas · 03_laudos · 04_exports</code></p>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0" />
+    <h3 style="margin:0 0 8px;font-size:15px">Conector Grafana / Postgres</h3>
+    <p class="muted">Publica metadados dos sites no Postgres (porta 3080). O Grafana lê essa base.</p>
+    <div class="field"><label>URL do conector</label><input id="platformConnectorUrl" placeholder="http://localhost:3080"></div>
+    <div class="split">
+      <div class="field"><label>Org ID</label><input id="platformOrgId" placeholder="cfiservicos"></div>
+      <div class="field"><label>Region ID</label><input id="platformRegionId" placeholder="local"></div>
+    </div>
+    <div class="split">
+      <div class="field"><label>Nome da regional</label><input id="platformRegionNome" placeholder="Ambiente local"></div>
+      <div class="field"><label>Código regional</label><input id="platformRegionCodigo" placeholder="LOCAL"></div>
+    </div>
+    <div class="field"><label>Token ingest (opcional)</label><input id="platformIngestToken" placeholder="vazio no piloto"></div>
+    <div class="btn-row" style="flex-wrap:wrap">
+      <button class="btn secondary" type="button" onclick="platformSyncSaveFromSettings()">Salvar conector</button>
+      <button class="btn" type="button" onclick="platformPublishToGrafana()">Publicar agora</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: DUPLICIDADE DE SITE ================= -->
+<div id="vaultDupModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="section-title"><h2>Duplicidade de site</h2></div>
+    <p id="vaultDupMensagem" style="white-space:pre-wrap;line-height:1.5;margin:4px 0 0"></p>
+    <div class="btn-row" style="margin-top:18px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn secondary" type="button" onclick="vaultDupResult('cancel')">Cancelar</button>
+      <button class="btn secondary" type="button" onclick="vaultDupResult('open')">Abrir existente</button>
+      <button class="btn" type="button" onclick="vaultDupResult('copy')">Criar cópia</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="vaultInboxInput" accept="application/json,.json" hidden onchange="vaultOnInboxSelected(event)" />
+
+<div id="toast" class="toast"></div>
+
+<!-- Bibliotecas externas (locais — funcionam offline) -->
+<script src="js/libs/jspdf.umd.min.js"></script>
+<script src="js/libs/jspdf.plugin.autotable.min.js"></script>
+<script src="js/libs/xlsx.full.min.js"></script>
+
+<!-- Módulos da aplicação -->
+<script src="js/state.js"></script>
+<script src="js/validation.js"></script>
+<script src="js/vault.js"></script>
+<script src="js/platform-sync.js"></script>
+<script src="js/mm-engine.js"></script>
+<script src="js/render.js"></script>
+<script src="js/mindmap.js"></script>
+<script src="js/graphlinks.js"></script>
+<script src="js/depgraph.js"></script>
+<script src="js/circuitgraph.js"></script>
+<script src="js/actions.js"></script>
+<script src="js/report.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
