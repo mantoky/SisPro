@@ -1,3 +1,6 @@
+# Old nested git backups (do not publish)
+**/.git_local_backup/
+
 # Secrets
 .env
 .env.*
