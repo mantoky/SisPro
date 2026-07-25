@@ -77,17 +77,48 @@ export function watchAuth(cb) {
   return onAuthStateChanged(_auth, cb);
 }
 
+/** Aguarda o primeiro evento de Auth (persistência do Firebase). */
+export function waitForAuthReady() {
+  if (!firebaseReady()) return Promise.resolve(null);
+  getFirebaseApp();
+  if (_auth.currentUser) return Promise.resolve(_auth.currentUser);
+  return new Promise((resolve) => {
+    const unsub = onAuthStateChanged(_auth, (user) => {
+      unsub();
+      resolve(user);
+    });
+  });
+}
+
 /**
  * Upsert sites no Firestore (motor de injeção SisPro).
  * @param {object[]} bundle — payloads toDesktopSitePayload()
  */
+export function mapFirestoreError(err) {
+  const code = String(err?.code || "");
+  const msg = String(err?.message || "");
+  if (code.includes("permission-denied") || /insufficient permissions|Missing or insufficient/i.test(msg)) {
+    return "Permissão insuficiente no Firestore. Use login com e-mail/senha (não modo campo) e publique as regras: firebase deploy --only firestore:rules";
+  }
+  if (code.includes("unauthenticated") || /unauth/i.test(msg)) {
+    return "Não autenticado no Firebase. Faça login com e-mail e senha novamente.";
+  }
+  if (code.includes("unavailable") || /network|offline/i.test(msg)) {
+    return "Firestore indisponível ou sem rede. Tente novamente quando estiver online.";
+  }
+  return msg || "Falha ao enviar para o Firestore.";
+}
+
 export async function pushSitesToFirestore(bundle) {
   if (!firebaseReady()) {
     throw new Error("Firebase config incompleta.");
   }
   const db = getDb();
   const auth = getFirebaseAuth();
-  const uid = auth?.currentUser?.uid || "anonymous";
+  const uid = auth?.currentUser?.uid;
+  if (!uid) {
+    throw new Error("Não autenticado no Firebase. Faça login com e-mail e senha (não modo campo).");
+  }
   const list = Array.isArray(bundle) ? bundle : [];
   if (!list.length) return { ok: true, enviados: 0 };
 
@@ -135,7 +166,7 @@ export async function pushSitesToFirestore(bundle) {
   }
 
   // registra dispositivo
-  if (uid && uid !== "anonymous") {
+  if (uid) {
     const devRef = doc(db, "orgs", ORG_ID, "devices", uid);
     await setDoc(
       devRef,
@@ -162,7 +193,10 @@ export async function pushRodadaToFirestore(rodada) {
   }
   const db = getDb();
   const auth = getFirebaseAuth();
-  const uid = auth?.currentUser?.uid || "campo";
+  const uid = auth?.currentUser?.uid;
+  if (!uid) {
+    throw new Error("Não autenticado no Firebase. Faça login com e-mail e senha.");
+  }
   const ref = doc(db, "orgs", ORG_ID, "rodadas", rodada.id);
   await setDoc(
     ref,

@@ -6,8 +6,9 @@
 
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/sispro-plataforma}"
-WEB_SRC="${WEB_SRC:-}"   # opcional: caminho do inventario_cfi_v3.5 no servidor
+# Monorepo padrão: /opt/SisPro/{sispro-plataforma,inventario_cfi_v3.5}
+APP_DIR="${APP_DIR:-/opt/SisPro/sispro-plataforma}"
+WEB_SRC="${WEB_SRC:-/opt/SisPro/inventario_cfi_v3.5}"
 DOMAIN_APP="${DOMAIN_APP:-sispro.techartsolucoes.com.br}"
 DOMAIN_GF="${DOMAIN_GF:-sispro-grafana.techartsolucoes.com.br}"
 

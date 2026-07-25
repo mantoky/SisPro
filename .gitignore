@@ -1,6 +1,10 @@
 # Old nested git backups (do not publish)
 **/.git_local_backup/
 
+# SSH private keys (nunca commitar)
+**/id_ed25519_sispro
+!**/id_ed25519_sispro.pub
+
 # Secrets
 .env
 .env.*

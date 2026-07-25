@@ -29,7 +29,7 @@
         </label>
         <button type="submit" class="btn btn-primary btn-block">Entrar e sincronizar</button>
         <button type="button" id="btnDemoLogin" class="btn btn-ghost btn-block">Continuar em modo campo (offline)</button>
-        <p class="hint">Cadastro local no aparelho · sync com o SisPro desktop quando houver rede.</p>
+        <p class="hint">Para sync com a plataforma use <strong>e-mail e senha</strong> Firebase. Modo campo só grava no aparelho.</p>
       </form>
     </section>
 
@@ -94,7 +94,12 @@
               <label class="field"><span>Longitude</span><input id="siteLng" inputmode="decimal" placeholder="-46.63" /></label>
             </div>
             <label class="field"><span>Resumo / observações</span><textarea id="siteResumo" rows="3" maxlength="2000" placeholder="Notas de campo…"></textarea></label>
-            <button type="submit" class="btn btn-primary btn-block">Salvar no aparelho</button>
+            <label class="check-row" id="wrapTplHierarquia">
+              <input type="checkbox" id="siteTplHierarquia" checked />
+              <span>Criar hierarquia padrão telecom (Civil, Torre, Energia, LTE…)</span>
+            </label>
+            <p class="hint">Após salvar, você monta ou ajusta as camadas pai → filho (igual ao SisPro desktop).</p>
+            <button type="submit" class="btn btn-primary btn-block">Salvar e abrir hierarquia</button>
             <button type="button" id="btnExcluirSite" class="btn btn-danger btn-block" hidden>Excluir site local</button>
           </form>
         </div>
@@ -126,8 +131,9 @@
             <h2>Ativos do site</h2>
             <button type="button" id="btnBackDetail" class="btn btn-ghost btn-sm">Voltar</button>
           </div>
-          <p class="hint assets-hint">Monte camadas pai → filho (sem mapa mental). Atributos sobem no sync para o SisPro.</p>
+          <p class="hint assets-hint">Monte camadas pai → filho (espelho do SisPro desktop). Toque no ativo para editar; use <strong>+</strong> para filho.</p>
           <button type="button" id="btnNovoAtivo" class="btn btn-primary btn-block">+ Novo ativo filho</button>
+          <button type="button" id="btnTplHierarquia" class="btn btn-ghost btn-block">Aplicar hierarquia padrão telecom</button>
           <div id="assetTree" class="asset-tree" role="list"></div>
         </div>
 
@@ -195,7 +201,7 @@
           <p id="syncStatusText" class="sync-status">—</p>
           <ul id="syncQueue" class="sync-queue"></ul>
           <button type="button" id="btnSyncNow" class="btn btn-primary btn-block">Sincronizar agora</button>
-          <p class="hint">Os sites salvos no aparelho sobem para o SisPro (Firestore) quando o técnico estiver autenticado e online.</p>
+          <p class="hint">Sync exige login Firebase (e-mail/senha) + rede. Modo campo não publica. Erro “Missing / Permissão insuficiente” = sem Auth ou regras Firestore não publicadas.</p>
         </div>
       </div>
 

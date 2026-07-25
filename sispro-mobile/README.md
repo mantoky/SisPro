@@ -52,15 +52,18 @@ npm run cap:android
 
 > **Windows:** se o caminho tiver acentos (`Inventário`), o Gradle já tem `android.overridePathCheck=true`. Em CI, prefira um path só ASCII.
 
-### iOS
+### iOS — PENDENTE (só em Mac)
 
-O projeto nativo `ios/` já está no repositório. **Build/IPA exige macOS + Xcode** (e CocoaPods).
+O projeto nativo `ios/` já está no repositório. **IPA não gera no Windows.**
+
+Caminho completo: ver `../STATUS.md` (seção iOS).
 
 ```bash
-npm run cap:ios
+npm run build && npx cap sync ios
+cd ios/App && pod install
+npx cap open ios
+# Xcode → Product → Archive → Distribute
 ```
-
-No Mac: `pod install` em `ios/App` se necessário, depois Archive no Xcode.
 
 ## Firebase (projeto `sispro-e068c`)
 
@@ -89,13 +92,22 @@ No SisPro desktop (Chrome/Edge): ⚙ → **Escolher pasta SisPro_Data**. Documen
 
 No detalhe do site → **PDF rodada**: gera PDF no estilo do prontuário SisPro (faixa verde CFI, dados do site, parecer, assinatura). No aparelho, abre o share sheet do Android.
 
-## Sync com SisPro desktop
+## Sync com SisPro / plataforma
 
 1. Sites salvos ficam `syncStatus: pending`.  
-2. Com Firebase configurado + login online → `runSync()` grava no Firestore.  
-3. Desktop importa `orgs/cfiservicos/sites`.  
+2. **Obrigatório:** login com e-mail/senha Firebase (não “modo campo”).  
+3. `runSync()` grava em `orgs/cfiservicos/sites` + `inbox`.  
+4. Desktop importa inbox; Grafana via botão **Publicar no Grafana**.  
 
-Sem apiKey, o bundle fica em `localStorage.sispro_mobile_last_sync_bundle`.
+Erro *Missing or insufficient permissions* (= “Perdido / Permissão insuficiente”):
+
+- Modo campo sem Auth, ou  
+- Regras não publicadas: `firebase deploy --only firestore:rules`
+
+## Hierarquia de ativos
+
+Na criação do site, marque **Criar hierarquia padrão telecom**.  
+Depois: Detalhe → **Ativos / camadas** (pai → filho, como no desktop).
 
 ## Identidade
 

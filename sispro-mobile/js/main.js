@@ -1,7 +1,16 @@
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
 import { StatusBar, Style } from "@capacitor/status-bar";
-import { login, loginDemo, logout, restoreSession, getSession, isFirebaseConfigured } from "./auth.js";
+import {
+  login,
+  loginDemo,
+  logout,
+  restoreSession,
+  getSession,
+  isFirebaseConfigured,
+  canSyncToPlatform,
+  syncBlockReason,
+} from "./auth.js";
 import { listSites, getSite, upsertSite, deleteSite } from "./sites.js";
 import { runSync, getPendingSites, markForSync, isOnline, enviarParaRevisao } from "./sync.js";
 import { listRodadas, rodadaRapidaPDF, syncRodada } from "./rodadas.js";
@@ -15,6 +24,7 @@ import {
   deleteAsset,
   countChildren,
   listAssets,
+  applyTelecomTemplate,
 } from "./assets.js";
 
 const $ = (id) => document.getElementById(id);
@@ -314,6 +324,9 @@ function openForm(site = null) {
   $("siteLng").value = site?.longitude || "";
   $("siteResumo").value = site?.resumo || "";
   $("btnExcluirSite").hidden = !site;
+  const wrapTpl = $("wrapTplHierarquia");
+  if (wrapTpl) wrapTpl.hidden = Boolean(site);
+  if ($("siteTplHierarquia") && !site) $("siteTplHierarquia").checked = true;
   showPanel("form");
 }
 
@@ -330,9 +343,18 @@ async function enterApp() {
 async function refreshSyncPanel() {
   const pending = await getPendingSites();
   const online = await isOnline();
+  const session = getSession();
+  let authLine = "";
+  if (session?.modo === "campo") {
+    authLine = " · modo campo (sem sync plataforma)";
+  } else if (canSyncToPlatform()) {
+    authLine = " · Firebase OK";
+  } else if (session) {
+    authLine = " · " + (syncBlockReason() || "Auth incompleta");
+  }
   $("syncStatusText").textContent = online
-    ? `Online · ${pending.length} pendente(s)`
-    : `Offline · ${pending.length} pendente(s)`;
+    ? `Online · ${pending.length} pendente(s)${authLine}`
+    : `Offline · ${pending.length} pendente(s)${authLine}`;
   const ul = $("syncQueue");
   ul.innerHTML = "";
   pending.forEach((s) => {
@@ -362,7 +384,7 @@ function bindEvents() {
   $("btnDemoLogin").addEventListener("click", async () => {
     await loginDemo();
     await enterApp();
-    toast("Modo campo (offline) ativo.");
+    toast("Modo campo: só local. Sync com plataforma exige e-mail/senha.", "error");
   });
 
   $("btnLogout").addEventListener("click", async () => {
@@ -383,6 +405,7 @@ function bindEvents() {
   $("formSite").addEventListener("submit", async (e) => {
     e.preventDefault();
     try {
+      const isNew = !$("siteId").value;
       const saved = await upsertSite({
         id: $("siteId").value || undefined,
         nome: $("siteNome").value,
@@ -395,9 +418,20 @@ function bindEvents() {
         longitude: $("siteLng").value,
         resumo: $("siteResumo").value,
       });
-      toast("Site salvo no aparelho.");
-      await openDetail(saved.id);
+      _currentSiteId = saved.id;
+      if (isNew && $("siteTplHierarquia")?.checked) {
+        try {
+          await applyTelecomTemplate(saved.id);
+          toast("Site + hierarquia telecom criados.");
+        } catch (tplErr) {
+          toast(tplErr.message || "Site salvo; template não aplicado.", "error");
+        }
+      } else {
+        toast(isNew ? "Site salvo. Monte a hierarquia de ativos." : "Site atualizado.");
+      }
       await renderSiteList($("buscaSite").value);
+      if (isNew) await openAssetsPanel();
+      else await openDetail(saved.id);
     } catch (err) {
       toast(err.message || "Erro ao salvar.", "error");
     }
@@ -423,6 +457,19 @@ function bindEvents() {
   $("btnNovoAtivo").addEventListener("click", async () => {
     const root = (await listAssets(_currentSiteId)).find((i) => i.parentId === null);
     openAssetForm(null, root?.id || null);
+  });
+  $("btnTplHierarquia")?.addEventListener("click", async () => {
+    if (!_currentSiteId) return;
+    const items = await listAssets(_currentSiteId);
+    const hasKids = items.some((i) => i.parentId !== null);
+    if (hasKids && !confirm("Já existem camadas. Substituir pela hierarquia padrão telecom?")) return;
+    try {
+      await applyTelecomTemplate(_currentSiteId, { force: hasKids });
+      toast("Hierarquia padrão aplicada.");
+      await openAssetsPanel();
+    } catch (err) {
+      toast(err.message || "Falha no template.", "error");
+    }
   });
   $("btnCancelAsset").addEventListener("click", () => openAssetsPanel());
   $("btnAddAttr").addEventListener("click", () => addAttrRow("", ""));

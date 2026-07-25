@@ -12,6 +12,30 @@ export async function getSite(id) {
   return sites.find((s) => s.id === id) || null;
 }
 
+/** Raiz alinhada ao contrato do SisPro desktop. */
+function buildRootItem(siteId, rootItemId, input, nome, now) {
+  const rootNome = nome.startsWith("SITE ") ? nome : `SITE ${nome}`;
+  return {
+    id: rootItemId,
+    parentId: null,
+    nome: rootNome,
+    categoria: "Raiz",
+    tipo: "Site Telecom",
+    criticidade: input.criticidade || "Média",
+    descricao: String(input.resumo || "").trim() || "Raiz do site",
+    atributos: {
+      "Local de Instalação": String(input.localInstalacao || "").trim(),
+      "Centro de Trabalho": String(input.centroTrabalho || "").trim(),
+      origem: "sispro-mobile",
+    },
+    dependencias: [],
+    fotos: [],
+    checklist: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 export async function upsertSite(input) {
   const sites = await loadSites();
   const codigo = String(input.codigo || "").trim();
@@ -28,14 +52,33 @@ export async function upsertSite(input) {
   if (input.id) {
     const idx = sites.findIndex((s) => s.id === input.id);
     if (idx === -1) throw new Error("Site não encontrado.");
+    const prev = sites[idx];
+    const root = Array.isArray(prev.items)
+      ? prev.items.find((i) => i.parentId === null)
+      : null;
+    if (root) {
+      root.nome = nome.startsWith("SITE ") ? nome : `SITE ${nome}`;
+      root.categoria = "Raiz";
+      root.tipo = "Site Telecom";
+      root.criticidade = input.criticidade || root.criticidade || "Média";
+      root.descricao = String(input.resumo || "").trim() || root.descricao;
+      root.atributos = {
+        ...(root.atributos || {}),
+        "Local de Instalação": String(input.localInstalacao || "").trim(),
+        "Centro de Trabalho": String(input.centroTrabalho || "").trim(),
+      };
+      root.updatedAt = now;
+    }
     sites[idx] = {
-      ...sites[idx],
+      ...prev,
       ...normalize(input),
       id: input.id,
       codigo,
       nome,
       updatedAt: now,
       syncStatus: "pending",
+      items: prev.items,
+      rootItemId: prev.rootItemId || root?.id,
     };
     await saveSites(sites);
     return sites[idx];
@@ -52,23 +95,7 @@ export async function upsertSite(input) {
     updatedAt: now,
     syncStatus: "pending",
     prontuarioStatus: "em_campo",
-    items: [
-      {
-        id: rootItemId,
-        parentId: null,
-        nome,
-        categoria: "Site",
-        tipo: "Raiz",
-        criticidade: input.criticidade || "Média",
-        descricao: String(input.resumo || "").trim() || "Raiz do site",
-        atributos: {},
-        dependencias: [],
-        fotos: [],
-        checklist: [],
-        createdAt: now,
-        updatedAt: now,
-      },
-    ],
+    items: [buildRootItem(null, rootItemId, input, nome, now)],
   };
   sites.push(site);
   await saveSites(sites);

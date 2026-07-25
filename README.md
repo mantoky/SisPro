@@ -8,6 +8,12 @@ Sistema de Prontuário de Sites — ecossistema completo.
 | `sispro-mobile/` | App mobile (Capacitor) |
 | `sispro-plataforma/` | Postgres + Grafana + connector + deploy VPS |
 
+## Status e pendências
+
+Ver **[STATUS.md](./STATUS.md)** — VPS, APK Android, **IPA iOS (pendente / Mac)**, sync Firebase, hierarquia mobile.
+
 ## Deploy VPS
 
-Ver `sispro-plataforma/deploy/VPS.md`.
+1. Deploy Key SSH: `sispro-plataforma/deploy/GITHUB_SSH.md`
+2. Checklist: `sispro-plataforma/deploy/VPS.md`
+3. Health: `curl -s https://sispro.techartsolucoes.com.br/api/health`

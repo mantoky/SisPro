@@ -5,6 +5,9 @@ import {
   firebaseReady,
   firebaseSignIn,
   firebaseSignOut,
+  getFirebaseAuth,
+  getFirebaseApp,
+  waitForAuthReady,
 } from "./firebase-bridge.js";
 import { isFirebaseConfigReady } from "./firebase-config.js";
 
@@ -16,11 +19,42 @@ export function getSession() {
 
 export async function restoreSession() {
   _session = await loadSession();
+  // Sessão "online" sem Firebase Auth ativo não sincroniza — força novo login.
+  if (_session?.modo === "online" && isFirebaseConfigured()) {
+    const user = await waitForAuthReady();
+    if (!user) {
+      _session = null;
+      await clearSession();
+    }
+  }
   return _session;
 }
 
 export function isFirebaseConfigured() {
   return isFirebaseConfigReady() && firebaseReady();
+}
+
+/** Pode gravar no Firestore? (não basta sessão local — precisa Auth Firebase). */
+export function canSyncToPlatform() {
+  if (!isFirebaseConfigured()) return false;
+  if (!_session || _session.modo === "campo") return false;
+  getFirebaseApp();
+  return Boolean(getFirebaseAuth()?.currentUser);
+}
+
+export function syncBlockReason() {
+  if (!isFirebaseConfigured()) {
+    return "Firebase não configurado. Verifique js/firebase-config.js.";
+  }
+  if (!_session) return "Faça login para sincronizar.";
+  if (_session.modo === "campo") {
+    return "Modo campo (offline) não sincroniza. Saia e entre com e-mail e senha Firebase.";
+  }
+  getFirebaseApp();
+  if (!getFirebaseAuth()?.currentUser) {
+    return "Sessão expirada. Faça login novamente com e-mail e senha.";
+  }
+  return "";
 }
 
 /**

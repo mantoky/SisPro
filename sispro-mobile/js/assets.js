@@ -52,15 +52,22 @@ function ensureRoot(site) {
   if (!root) {
     const rootId = site.rootItemId || uid();
     site.rootItemId = rootId;
+    const rootNome = String(site.nome || "Site").startsWith("SITE ")
+      ? site.nome
+      : `SITE ${site.nome || "Site"}`;
     root = {
       id: rootId,
       parentId: null,
-      nome: site.nome,
-      categoria: "Site",
-      tipo: "Raiz",
+      nome: rootNome,
+      categoria: "Raiz",
+      tipo: "Site Telecom",
       criticidade: site.criticidade || "Média",
       descricao: site.resumo || "Raiz do site",
-      atributos: {},
+      atributos: {
+        "Local de Instalação": site.localInstalacao || "",
+        "Centro de Trabalho": site.centroTrabalho || "",
+        origem: "sispro-mobile",
+      },
       dependencias: [],
       fotos: [],
       checklist: [],
@@ -70,8 +77,79 @@ function ensureRoot(site) {
     site.items.push(root);
   } else {
     site.rootItemId = root.id;
+    if (root.categoria === "Site" && root.tipo === "Raiz") {
+      root.categoria = "Raiz";
+      root.tipo = "Site Telecom";
+    }
   }
   return root;
+}
+
+function mkItem(parentId, nome, categoria, tipo, criticidade, descricao) {
+  const now = nowIso();
+  return {
+    id: uid(),
+    parentId,
+    nome,
+    categoria,
+    tipo,
+    criticidade,
+    descricao,
+    atributos: {},
+    dependencias: [],
+    fotos: [],
+    checklist: [
+      { texto: "Item identificado", status: "Não inspecionado" },
+      { texto: "Fotos registradas", status: "Não inspecionado" },
+    ],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/**
+ * Hierarquia padrão telecom (espelho do seed desktop), sob a raiz.
+ * Só aplica se o site tiver apenas a raiz (ou force=true).
+ */
+export async function applyTelecomTemplate(siteId, { force = false } = {}) {
+  return withSite(siteId, (site) => {
+    const root = ensureRoot(site);
+    const children = site.items.filter((i) => i.parentId !== null);
+    if (children.length && !force) {
+      throw new Error("Site já tem camadas. Use + Novo ativo ou limpe a árvore antes do template.");
+    }
+    if (children.length && force) {
+      site.items = site.items.filter((i) => i.parentId === null);
+    }
+
+    const civil = mkItem(root.id, "Infraestrutura Civil", "Civil", "Sistema", "Alta", "Perímetro, portão e fundações.");
+    const torre = mkItem(root.id, "Torre Autoportante", "Estrutura Vertical", "Torre", "Crítica", "Estrutura vertical e antenas.");
+    const energia = mkItem(root.id, "Sistema de Energia", "Energia", "AC/DC", "Crítica", "Entrada AC, gerador, retificador e baterias.");
+    const shelter = mkItem(root.id, "Abrigo de Equipamentos", "Shelter", "Abrigo climatizado", "Crítica", "Abrigo técnico climatizado.");
+    const tx = mkItem(root.id, "Camada de Transmissão", "Transmissão", "MW/Fibra/IP", "Crítica", "Backhaul MW, fibra e IP.");
+    const lte = mkItem(root.id, "LTE / eNode-B", "LTE", "eNode-B", "Crítica", "BBU, RRU, GPS e setores.");
+    const spda = mkItem(root.id, "SPDA e Aterramento", "Proteção", "SPDA", "Crítica", "Proteção contra descargas e terra.");
+
+    site.items.push(
+      civil,
+      mkItem(civil.id, "Fechamento do Perímetro", "Civil", "Cerca galvanizada", "Média", "Cerca e acesso."),
+      torre,
+      mkItem(torre.id, "Fundações da Torre", "Estrutura Vertical", "Blocos de concreto", "Crítica", "Fundações e chumbadores."),
+      energia,
+      mkItem(energia.id, "QDG", "Energia AC", "Quadro Geral", "Crítica", "Quadro de distribuição geral."),
+      mkItem(energia.id, "Retificador -48V", "Energia DC", "Retificador", "Crítica", "Sistema DC telecom."),
+      shelter,
+      mkItem(shelter.id, "Climatização Principal", "Climatização", "Split", "Alta", "Refrigeração do abrigo."),
+      tx,
+      mkItem(tx.id, "Enlace MW", "Transmissão MW", "Rádio Micro-ondas", "Crítica", "Backhaul ponto-a-ponto."),
+      lte,
+      mkItem(lte.id, "BBU LTE", "LTE", "Baseband", "Crítica", "Unidade baseband."),
+      mkItem(lte.id, "RRU Setor 1", "LTE", "RRU", "Crítica", "Rádio remoto setor 1."),
+      spda,
+      mkItem(spda.id, "Malha de Terra", "Aterramento", "Malha", "Crítica", "Malha enterrada.")
+    );
+    return { rootId: root.id, added: site.items.length - 1 };
+  });
 }
 
 async function withSite(siteId, mutator) {

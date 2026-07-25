@@ -2,8 +2,8 @@
 
 import { Network } from "@capacitor/network";
 import { loadSites, saveSites, nowIso } from "./storage.js";
-import { getSession, isFirebaseConfigured } from "./auth.js";
-import { pushSitesToFirestore } from "./firebase-bridge.js";
+import { getSession, isFirebaseConfigured, canSyncToPlatform, syncBlockReason } from "./auth.js";
+import { pushSitesToFirestore, mapFirestoreError } from "./firebase-bridge.js";
 
 export async function getPendingSites() {
   const sites = await loadSites();
@@ -37,16 +37,22 @@ export function toDesktopSitePayload(mobileSite, session) {
   const rootId = mobileSite.rootItemId || ("root-" + mobileSite.id);
   let items = Array.isArray(mobileSite.items) ? mobileSite.items.slice() : [];
   if (!items.length || !items.some((i) => i.parentId === null)) {
+    const rootNome = mobileSite.nome.startsWith("SITE ")
+      ? mobileSite.nome
+      : `SITE ${mobileSite.nome}`;
     items = [
       {
         id: rootId,
         parentId: null,
-        nome: mobileSite.nome,
-        categoria: "Site",
-        tipo: "Raiz",
+        nome: rootNome,
+        categoria: "Raiz",
+        tipo: "Site Telecom",
         criticidade: mobileSite.criticidade || "Média",
         descricao: mobileSite.resumo || "Raiz criada pelo SisPro Mobile",
-        atributos: {},
+        atributos: {
+          "Local de Instalação": mobileSite.localInstalacao || "",
+          "Centro de Trabalho": mobileSite.centroTrabalho || "",
+        },
         dependencias: [],
         fotos: [],
         checklist: [],
@@ -77,6 +83,10 @@ export function toDesktopSitePayload(mobileSite, session) {
       ...root.atributos,
       origem: "sispro-mobile",
       tecnico: session?.email || root.atributos?.tecnico || "",
+      "Local de Instalação":
+        root.atributos?.["Local de Instalação"] || mobileSite.localInstalacao || "",
+      "Centro de Trabalho":
+        root.atributos?.["Centro de Trabalho"] || mobileSite.centroTrabalho || "",
     };
   }
 
@@ -142,6 +152,14 @@ export async function runSync() {
   const bundle = pending.map((s) => toDesktopSitePayload(s, session));
 
   if (isFirebaseConfigured() && online) {
+    if (!canSyncToPlatform()) {
+      return {
+        ok: false,
+        enviados: 0,
+        mensagem: syncBlockReason() || "Não é possível sincronizar com a plataforma.",
+        bundle,
+      };
+    }
     try {
       await pushSitesToFirestore(bundle);
       const sites = await loadSites();
@@ -158,14 +176,14 @@ export async function runSync() {
       return {
         ok: true,
         enviados: pending.length,
-        mensagem: `${pending.length} site(s) sincronizado(s) com o SisPro.`,
+        mensagem: `${pending.length} site(s) sincronizado(s) com o SisPro (Firestore).`,
         bundle,
       };
     } catch (err) {
       return {
         ok: false,
         enviados: 0,
-        mensagem: err?.message || "Falha ao enviar para Firestore. Bundle preparado.",
+        mensagem: mapFirestoreError(err),
         bundle,
       };
     }
