@@ -18,41 +18,36 @@ Repo GitHub: https://github.com/mantoky/SisPro
 
 ---
 
-## Android APK
+## SisPro Mobile PWA (caminho principal)
 
 | Item | Valor |
 |------|--------|
-| Status | Gerado (debug) |
-| Comando | `cd sispro-mobile && npm run apk:debug` |
-| Caminho | `sispro-mobile/android/app/build/outputs/apk/debug/app-debug.apk` |
-| Release Play Store | Pendente (keystore + `npm run apk:release`) |
+| URL | https://sispro-app.techartsolucoes.com.br/ |
+| Card apex | SLOT 09 em techartsolucoes.com.br (mesmo padrão LOADOUT) |
+| Docs deploy | `sispro-mobile/deploy/PWA.md` |
+| Nginx | `sispro-mobile/deploy/nginx-sispro-app.conf` |
+| Webroot VPS | `/var/www/sispro-app` |
+| Build | `cd sispro-mobile && npm run build` → `dist/` |
+
+### Pendente para publicar a PWA
+1. DNS A `sispro-app` → IP VPS  
+2. Firebase → Authorized domains → `sispro-app.techartsolucoes.com.br`  
+3. `git pull` + build + nginx + certbot (ver `PWA.md`)  
+4. `bash deploy/add_techart_card.sh` no apex  
 
 ---
 
-## iOS IPA — PENDENTE
+## Android APK (opcional)
 
-**Bloqueio:** build de IPA exige **macOS + Xcode + CocoaPods**. Não é possível gerar no Windows.
+| Item | Valor |
+|------|--------|
+| Status | Debug local (alternativa à PWA) |
+| Comando | `cd sispro-mobile && npm run apk:debug` |
+| Caminho | `sispro-mobile/android/app/build/outputs/apk/debug/app-debug.apk` |
 
-### Caminho para finalizar
+## iOS IPA — opcional / Mac
 
-1. Copiar/clonar o monorepo em um Mac (ou CI macOS).
-2. Instalar dependências:
-
-```bash
-cd sispro-mobile
-npm install
-npm run build
-npx cap sync ios
-cd ios/App && pod install && cd ../..
-npx cap open ios
-```
-
-3. No Xcode:
-   - Selecionar Team / Bundle ID `br.com.cfiservicos.sispro`
-   - **Product → Archive**
-   - **Distribute App** (Ad Hoc / TestFlight / App Store)
-
-4. Projeto nativo já existe em: `sispro-mobile/ios/`
+Preferência atual: **PWA**. IPA nativo só se necessário (macOS + Xcode) — ver histórico Capacitor em `sispro-mobile/ios/`.
 
 ---
 

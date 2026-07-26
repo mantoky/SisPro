@@ -2,12 +2,13 @@
   "name": "sispro-mobile",
   "version": "1.0.0",
   "private": true,
-  "description": "SisPro Mobile — cadastro local de sites com sync (Android/iOS via Capacitor)",
+  "description": "SisPro Mobile — PWA de campo + Capacitor (Android/iOS opcional)",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "pwa:build": "vite build",
     "cap:sync": "npm run build && npx cap sync",
     "cap:android": "npm run cap:sync && npx cap open android",
     "cap:ios": "npm run cap:sync && npx cap open ios",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.0",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "vite-plugin-pwa": "^0.21.1"
   }
 }

@@ -1,6 +1,9 @@
 # SisPro Mobile
 
-App nativo **Android / iOS** (Capacitor) para cadastro local de sites em campo, com sincronização para o harness **SisPro** desktop.
+**PWA** de campo (principal) + Capacitor opcional (Android/iOS), com sync Firebase para o harness **SisPro**.
+
+- Produção: https://sispro-app.techartsolucoes.com.br/  
+- Deploy: `deploy/PWA.md` · Card TechArt: `deploy/techart-card.html`
 
 ## Escopo
 
