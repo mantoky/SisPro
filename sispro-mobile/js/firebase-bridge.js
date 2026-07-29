@@ -97,6 +97,9 @@ export function waitForAuthReady() {
 export function mapFirestoreError(err) {
   const code = String(err?.code || "");
   const msg = String(err?.message || "");
+  if (Array.isArray(err?.partialOk) && err.partialOk.length) {
+    return `${msg || "Falha no meio do sync."} (${err.partialOk.length} site(s) já gravado(s); os restantes ficam pendentes.)`;
+  }
   if (code.includes("permission-denied") || /insufficient permissions|Missing or insufficient/i.test(msg)) {
     return "Permissão insuficiente no Firestore. Use login com e-mail/senha (não modo campo) e publique as regras: firebase deploy --only firestore:rules";
   }
@@ -120,53 +123,69 @@ export async function pushSitesToFirestore(bundle) {
     throw new Error("Não autenticado no Firebase. Faça login com e-mail e senha (não modo campo).");
   }
   const list = Array.isArray(bundle) ? bundle : [];
-  if (!list.length) return { ok: true, enviados: 0 };
+  if (!list.length) return { ok: true, enviados: 0, enviadosIds: [] };
+
+  const enviadosIds = [];
 
   for (const site of list) {
-    const siteId = site.id;
-    const ref = doc(db, "orgs", ORG_ID, "sites", siteId);
-    await setDoc(
-      ref,
-      {
-        ...site,
-        orgId: ORG_ID,
-        meta: {
-          ...(site.metaMobile || {}),
-          origem: "sispro-mobile",
-          lastSyncedBy: uid,
+    try {
+      const siteId = site.id;
+      const ref = doc(db, "orgs", ORG_ID, "sites", siteId);
+      await setDoc(
+        ref,
+        {
+          ...site,
           orgId: ORG_ID,
+          meta: {
+            ...(site.metaMobile || {}),
+            origem: "sispro-mobile",
+            lastSyncedBy: uid,
+            orgId: ORG_ID,
+          },
+          sync: {
+            status: "synced",
+            lastSyncedAt: serverTimestamp(),
+            revision: Date.now(),
+          },
+          updatedAtServer: serverTimestamp(),
         },
-        sync: {
-          status: "synced",
-          lastSyncedAt: serverTimestamp(),
-          revision: Date.now(),
-        },
-        updatedAtServer: serverTimestamp(),
-      },
-      { merge: true }
-    );
+        { merge: true }
+      );
 
-    // Envelope leve para o watcher/desktop (subscription)
-    const inboxId = `${site.codigo || siteId}_${Date.now()}`;
-    const inboxRef = doc(db, "orgs", ORG_ID, "inbox", inboxId);
-    await setDoc(inboxRef, {
-      orgId: ORG_ID,
-      siteId,
-      siteCodigo: site.codigo,
-      siteNome: site.nome,
-      prontuarioStatus: site.prontuarioStatus || "em_campo",
-      tipo: site.prontuarioStatus === "enviado_pelo_tecnico" ? "envio_revisao" : "sync_site",
-      revision: Date.now(),
-      deviceUid: uid,
-      itensCount: Array.isArray(site.items) ? site.items.length : 0,
-      createdAt: serverTimestamp(),
-      status: "pending",
-      payloadRef: `orgs/${ORG_ID}/sites/${siteId}`,
-    });
+      // Envelope leve para o watcher/desktop (subscription)
+      const inboxId = `${site.codigo || siteId}_${Date.now()}`;
+      const inboxRef = doc(db, "orgs", ORG_ID, "inbox", inboxId);
+      await setDoc(inboxRef, {
+        orgId: ORG_ID,
+        siteId,
+        siteCodigo: site.codigo,
+        siteNome: site.nome,
+        prontuarioStatus: site.prontuarioStatus || "em_campo",
+        tipo: site.prontuarioStatus === "enviado_pelo_tecnico" ? "envio_revisao" : "sync_site",
+        revision: Date.now(),
+        deviceUid: uid,
+        itensCount: Array.isArray(site.items) ? site.items.length : 0,
+        createdAt: serverTimestamp(),
+        status: "pending",
+        payloadRef: `orgs/${ORG_ID}/sites/${siteId}`,
+      });
+
+      enviadosIds.push(siteId);
+    } catch (err) {
+      const partial = new Error(
+        enviadosIds.length
+          ? `Sync parcial: ${enviadosIds.length} ok; falhou em ${site?.id || "?"}: ${err?.message || err}`
+          : (err?.message || String(err))
+      );
+      partial.code = err?.code;
+      partial.partialOk = enviadosIds.slice();
+      partial.cause = err;
+      throw partial;
+    }
   }
 
   // registra dispositivo
-  if (uid) {
+  if (uid && enviadosIds.length) {
     const devRef = doc(db, "orgs", ORG_ID, "devices", uid);
     await setDoc(
       devRef,
@@ -181,7 +200,7 @@ export async function pushSitesToFirestore(bundle) {
     );
   }
 
-  return { ok: true, enviados: list.length };
+  return { ok: true, enviados: enviadosIds.length, enviadosIds };
 }
 
 /**

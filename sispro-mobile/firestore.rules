@@ -1,13 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Piloto SisPro: qualquer usuário autenticado (Email/Password) lê/escreve na org.
+    // Piloto SisPro: Auth Email/Password somente na org fixa.
+    // Quando houver custom claim orgId, deve coincidir com o path.
     function signedIn() {
       return request.auth != null;
     }
 
+    function orgAllowed(orgId) {
+      return signedIn()
+        && orgId == 'cfiservicos'
+        && (
+          !('orgId' in request.auth.token)
+          || request.auth.token.orgId == orgId
+        );
+    }
+
     match /orgs/{orgId}/{document=**} {
-      allow read, create, update: if signedIn();
+      allow read, create, update: if orgAllowed(orgId);
       allow delete: if false;
     }
   }

@@ -2,7 +2,9 @@
  * Firebase Web SDK — projeto sispro-e068c
  */
 
-export const ORG_ID = "cfiservicos";
+import { PILOT_ORG_ID } from "./site-contract.js";
+
+export const ORG_ID = PILOT_ORG_ID;
 
 export const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBhsLnn95ZWnTK8aTrv9iyBq4baasycSuM",

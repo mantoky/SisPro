@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 # Insere o card SLOT 09 (SisPro Mobile PWA) no index do apex.
 # Idempotente. Rodar na VPS como root.
+# Override: INDEX=/caminho/index.html bash deploy/add_techart_card.sh
 set -euo pipefail
 
 INDEX="${INDEX:-/var/www/techartsolucoes.com.br/html/index.html}"
 [ -f "$INDEX" ] || { echo "ERRO: $INDEX nao encontrado"; exit 1; }
+export INDEX
 
 python3 - <<'PYEOF'
 # -*- coding: utf-8 -*-
-import io, time
+import io, os, time
 
-INDEX = "/var/www/techartsolucoes.com.br/html/index.html"
+INDEX = os.environ["INDEX"]
 
 with io.open(INDEX, "r", encoding="utf-8") as f:
     html = f.read()

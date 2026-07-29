@@ -1,6 +1,13 @@
 /* Ativos do site — hierarquia pai/filho + atributos (espelho SisPro items[]) */
 
 import { loadSites, saveSites, uid, nowIso } from "./storage.js";
+import {
+  ROOT_CATEGORIA,
+  ROOT_TIPO,
+  withSitePrefix,
+  withoutSitePrefix,
+  normalizeRootShape,
+} from "./site-contract.js";
 
 export const CATEGORIAS_SUGERIDAS = [
   "Civil",
@@ -46,21 +53,26 @@ export const TIPOS_SUGERIDOS = [
   "Outro",
 ];
 
+/**
+ * Garante raiz no contrato desktop.
+ * @returns {{ root: object, dirty: boolean }}
+ */
 function ensureRoot(site) {
-  if (!Array.isArray(site.items)) site.items = [];
+  let dirty = false;
+  if (!Array.isArray(site.items)) {
+    site.items = [];
+    dirty = true;
+  }
   let root = site.items.find((i) => i.parentId === null);
   if (!root) {
     const rootId = site.rootItemId || uid();
     site.rootItemId = rootId;
-    const rootNome = String(site.nome || "Site").startsWith("SITE ")
-      ? site.nome
-      : `SITE ${site.nome || "Site"}`;
     root = {
       id: rootId,
       parentId: null,
-      nome: rootNome,
-      categoria: "Raiz",
-      tipo: "Site Telecom",
+      nome: withSitePrefix(site.nome || "Site"),
+      categoria: ROOT_CATEGORIA,
+      tipo: ROOT_TIPO,
       criticidade: site.criticidade || "Média",
       descricao: site.resumo || "Raiz do site",
       atributos: {
@@ -75,14 +87,22 @@ function ensureRoot(site) {
       updatedAt: nowIso(),
     };
     site.items.push(root);
+    dirty = true;
   } else {
     site.rootItemId = root.id;
-    if (root.categoria === "Site" && root.tipo === "Raiz") {
-      root.categoria = "Raiz";
-      root.tipo = "Site Telecom";
+    const prevCat = root.categoria;
+    const prevTipo = root.tipo;
+    const prevNome = root.nome;
+    normalizeRootShape(root);
+    if (
+      prevCat !== root.categoria ||
+      prevTipo !== root.tipo ||
+      prevNome !== root.nome
+    ) {
+      dirty = true;
     }
   }
-  return root;
+  return { root, dirty };
 }
 
 function mkItem(parentId, nome, categoria, tipo, criticidade, descricao) {
@@ -113,7 +133,7 @@ function mkItem(parentId, nome, categoria, tipo, criticidade, descricao) {
  */
 export async function applyTelecomTemplate(siteId, { force = false } = {}) {
   return withSite(siteId, (site) => {
-    const root = ensureRoot(site);
+    const { root } = ensureRoot(site);
     const children = site.items.filter((i) => i.parentId !== null);
     if (children.length && !force) {
       throw new Error("Site já tem camadas. Use + Novo ativo ou limpe a árvore antes do template.");
@@ -168,8 +188,11 @@ export async function listAssets(siteId) {
   const sites = await loadSites();
   const site = sites.find((s) => s.id === siteId);
   if (!site) return [];
-  ensureRoot(site);
-  await saveSites(sites);
+  const { dirty } = ensureRoot(site);
+  if (dirty) {
+    // Migração local de contrato — não marca pending (evita sync só por leitura).
+    await saveSites(sites);
+  }
   return site.items.slice();
 }
 
@@ -272,14 +295,16 @@ export async function upsertAsset(siteId, input) {
     if (existing) {
       const idx = site.items.findIndex((i) => i.id === input.id);
       if (editingRoot) {
+        const canonicalNome = withoutSitePrefix(payload.nome);
         site.items[idx] = {
           ...existing,
           ...payload,
           parentId: null,
-          categoria: payload.categoria || "Site",
-          tipo: payload.tipo || "Raiz",
+          nome: withSitePrefix(canonicalNome),
+          categoria: ROOT_CATEGORIA,
+          tipo: ROOT_TIPO,
         };
-        site.nome = site.items[idx].nome;
+        site.nome = canonicalNome;
       } else {
         if (payload.parentId === existing.id) throw new Error("Um ativo não pode ser pai de si mesmo.");
         site.items[idx] = { ...existing, ...payload };

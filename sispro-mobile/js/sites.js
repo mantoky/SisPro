@@ -1,6 +1,13 @@
 /* CRUD de sites locais (sem mapa mental) */
 
 import { loadSites, saveSites, uid, nowIso } from "./storage.js";
+import {
+  ROOT_CATEGORIA,
+  ROOT_TIPO,
+  withSitePrefix,
+  withoutSitePrefix,
+  normalizeRootShape,
+} from "./site-contract.js";
 
 export async function listSites() {
   const sites = await loadSites();
@@ -13,14 +20,13 @@ export async function getSite(id) {
 }
 
 /** Raiz alinhada ao contrato do SisPro desktop. */
-function buildRootItem(siteId, rootItemId, input, nome, now) {
-  const rootNome = nome.startsWith("SITE ") ? nome : `SITE ${nome}`;
+function buildRootItem(rootItemId, input, nome, now) {
   return {
     id: rootItemId,
     parentId: null,
-    nome: rootNome,
-    categoria: "Raiz",
-    tipo: "Site Telecom",
+    nome: withSitePrefix(nome),
+    categoria: ROOT_CATEGORIA,
+    tipo: ROOT_TIPO,
     criticidade: input.criticidade || "Média",
     descricao: String(input.resumo || "").trim() || "Raiz do site",
     atributos: {
@@ -39,7 +45,7 @@ function buildRootItem(siteId, rootItemId, input, nome, now) {
 export async function upsertSite(input) {
   const sites = await loadSites();
   const codigo = String(input.codigo || "").trim();
-  const nome = String(input.nome || "").trim();
+  const nome = withoutSitePrefix(String(input.nome || "").trim());
   if (!nome) throw new Error("Informe o nome do site.");
   if (!codigo) throw new Error("Informe o código do site.");
 
@@ -57,9 +63,8 @@ export async function upsertSite(input) {
       ? prev.items.find((i) => i.parentId === null)
       : null;
     if (root) {
-      root.nome = nome.startsWith("SITE ") ? nome : `SITE ${nome}`;
-      root.categoria = "Raiz";
-      root.tipo = "Site Telecom";
+      normalizeRootShape(root);
+      root.nome = withSitePrefix(nome);
       root.criticidade = input.criticidade || root.criticidade || "Média";
       root.descricao = String(input.resumo || "").trim() || root.descricao;
       root.atributos = {
@@ -95,7 +100,7 @@ export async function upsertSite(input) {
     updatedAt: now,
     syncStatus: "pending",
     prontuarioStatus: "em_campo",
-    items: [buildRootItem(null, rootItemId, input, nome, now)],
+    items: [buildRootItem(rootItemId, input, nome, now)],
   };
   sites.push(site);
   await saveSites(sites);

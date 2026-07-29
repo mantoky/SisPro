@@ -4,6 +4,7 @@ import { Network } from "@capacitor/network";
 import { loadSites, saveSites, nowIso } from "./storage.js";
 import { getSession, isFirebaseConfigured, canSyncToPlatform, syncBlockReason } from "./auth.js";
 import { pushSitesToFirestore, mapFirestoreError } from "./firebase-bridge.js";
+import { ROOT_CATEGORIA, ROOT_TIPO, withSitePrefix } from "./site-contract.js";
 
 export async function getPendingSites() {
   const sites = await loadSites();
@@ -37,16 +38,13 @@ export function toDesktopSitePayload(mobileSite, session) {
   const rootId = mobileSite.rootItemId || ("root-" + mobileSite.id);
   let items = Array.isArray(mobileSite.items) ? mobileSite.items.slice() : [];
   if (!items.length || !items.some((i) => i.parentId === null)) {
-    const rootNome = mobileSite.nome.startsWith("SITE ")
-      ? mobileSite.nome
-      : `SITE ${mobileSite.nome}`;
     items = [
       {
         id: rootId,
         parentId: null,
-        nome: rootNome,
-        categoria: "Raiz",
-        tipo: "Site Telecom",
+        nome: withSitePrefix(mobileSite.nome),
+        categoria: ROOT_CATEGORIA,
+        tipo: ROOT_TIPO,
         criticidade: mobileSite.criticidade || "Média",
         descricao: mobileSite.resumo || "Raiz criada pelo SisPro Mobile",
         atributos: {
@@ -79,6 +77,9 @@ export function toDesktopSitePayload(mobileSite, session) {
   // marca origem no root
   const root = items.find((i) => i.parentId === null);
   if (root) {
+    root.categoria = ROOT_CATEGORIA;
+    root.tipo = ROOT_TIPO;
+    root.nome = withSitePrefix(root.nome || mobileSite.nome);
     root.atributos = {
       ...root.atributos,
       origem: "sispro-mobile",
@@ -133,10 +134,25 @@ export async function enviarParaRevisao(siteId) {
   return runSync();
 }
 
+async function markSitesSynced(siteIds) {
+  if (!siteIds?.length) return;
+  const sites = await loadSites();
+  const now = nowIso();
+  const idSet = new Set(siteIds);
+  for (const s of sites) {
+    if (idSet.has(s.id)) {
+      s.syncStatus = "synced";
+      s.lastSyncAttempt = now;
+      s.syncedAt = now;
+    }
+  }
+  await saveSites(sites);
+}
+
 /**
  * Executa sync:
  * 1) monta fila pending
- * 2) se Firebase ok + online → envia (stub)
+ * 2) se Firebase ok + online → envia
  * 3) senão → gera bundle local e marca como "queued"
  */
 export async function runSync() {
@@ -161,30 +177,25 @@ export async function runSync() {
       };
     }
     try {
-      await pushSitesToFirestore(bundle);
-      const sites = await loadSites();
-      const now = nowIso();
-      for (const p of pending) {
-        const s = sites.find((x) => x.id === p.id);
-        if (s) {
-          s.syncStatus = "synced";
-          s.lastSyncAttempt = now;
-          s.syncedAt = now;
-        }
-      }
-      await saveSites(sites);
+      const result = await pushSitesToFirestore(bundle);
+      await markSitesSynced(pending.map((p) => p.id));
       return {
         ok: true,
-        enviados: pending.length,
+        enviados: result.enviados ?? pending.length,
         mensagem: `${pending.length} site(s) sincronizado(s) com o SisPro (Firestore).`,
         bundle,
       };
     } catch (err) {
+      const partialIds = Array.isArray(err?.partialOk) ? err.partialOk : [];
+      if (partialIds.length) {
+        await markSitesSynced(partialIds);
+      }
       return {
         ok: false,
-        enviados: 0,
+        enviados: partialIds.length,
         mensagem: mapFirestoreError(err),
         bundle,
+        partialOk: partialIds,
       };
     }
   }
